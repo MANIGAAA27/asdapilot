@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Canonical template for a CustomField. One file per field at
+         force-app/main/default/objects/<Object>__c/fields/<Field>__c.field-meta.xml
+         Common type variants below — pick ONE and delete the others.
+         (Do NOT add <apiVersion>: CustomField XML rejects it.)
+    -->
+    <fullName>My_Field__c</fullName>
+    <label>My Field</label>
+    <description>What this field stores.</description>
+
+    <!-- Variant: Text -->
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+
+    <!-- Variant: LongTextArea (uncomment + delete the Text block above)
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>4</visibleLines>
+    -->
+
+    <!-- Variant: Picklist — use <valueSet><valueSetDefinition><value>, NOT legacy <picklist> (Rule 3)
+    <type>Picklist</type>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Open</fullName>
+                <default>true</default>
+                <label>Open</label>
+            </value>
+            <value>
+                <fullName>Closed</fullName>
+                <default>false</default>
+                <label>Closed</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+    -->
+
+    <!-- Variant: Lookup
+    <type>Lookup</type>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>Linked My Field</relationshipLabel>
+    <relationshipName>Linked_My_Field</relationshipName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    -->
+
+    <!-- Variant: MasterDetail (parent object becomes the owner; do NOT add <sharingModel> on the child object)
+    <type>MasterDetail</type>
+    <referenceTo>Account</referenceTo>
+    <relationshipLabel>My Child Records</relationshipLabel>
+    <relationshipName>My_Child_Records</relationshipName>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+    -->
+</CustomField>
