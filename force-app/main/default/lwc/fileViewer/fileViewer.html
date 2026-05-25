@@ -1,0 +1,96 @@
+<template>
+    <lightning-card title="Related Files" icon-name="standard:file">
+        <div class="slds-var-m-around_medium">
+
+            <!-- Loading state -->
+            <template lwc:if={isLoading}>
+                <div class="slds-align_absolute-center slds-var-p-around_large">
+                    <lightning-spinner
+                        alternative-text="Loading files..."
+                        size="small">
+                    </lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error state -->
+            <template lwc:elseif={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon
+                        icon-name="utility:error"
+                        alternative-text="Error"
+                        size="x-small"
+                        class="slds-var-m-right_x-small">
+                    </lightning-icon>
+                    <p>{errorMessage}</p>
+                </div>
+            </template>
+
+            <!-- Data state -->
+            <template lwc:else>
+
+                <!-- No files found -->
+                <template lwc:if={isEmptyState}>
+                    <div class="slds-illustration slds-illustration_small">
+                        <div class="slds-illustration__figure">
+                            <lightning-icon
+                                icon-name="utility:file"
+                                size="large"
+                                class="slds-var-m-bottom_small">
+                            </lightning-icon>
+                        </div>
+                        <div class="slds-illustration__body">
+                            <p class="slds-text-body_regular slds-text-color_weak">
+                                No files found for this record or its related records.
+                            </p>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- File list -->
+                <template lwc:else>
+                    <!-- File count header -->
+                    <div class="slds-var-m-bottom_small">
+                        <p class="slds-text-body_small slds-text-color_weak">
+                            {totalFilesLabel}
+                        </p>
+                    </div>
+
+                    <!-- Data table -->
+                    <lightning-datatable
+                        key-field="contentDocumentId"
+                        data={displayedFiles}
+                        columns={columns}
+                        sorted-by={sortedBy}
+                        sorted-direction={sortedDirection}
+                        onsort={handleSort}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+
+                    <!-- Pagination controls (shown only when total > page size) -->
+                    <template lwc:if={showPagination}>
+                        <div class="slds-grid slds-grid_align-center slds-var-m-top_small">
+                            <lightning-button
+                                label="Previous"
+                                onclick={handlePrevious}
+                                disabled={isPreviousDisabled}
+                                class="slds-var-m-right_small">
+                            </lightning-button>
+                            <span class="slds-align-middle slds-text-body_small slds-var-m-horizontal_small">
+                                Page {currentPage} of {totalPages}
+                            </span>
+                            <lightning-button
+                                label="Next"
+                                onclick={handleNext}
+                                disabled={isNextDisabled}
+                                class="slds-var-m-left_small">
+                            </lightning-button>
+                        </div>
+                    </template>
+                </template>
+
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

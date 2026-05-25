@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "Case_Transfer_Summary",
+      "package": "File_Viewer",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "Case_Transfer_Summary",
+  "name": "File_Viewer",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"

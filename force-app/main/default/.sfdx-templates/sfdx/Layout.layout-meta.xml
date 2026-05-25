@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Canonical minimal page layout.
+         CRITICAL: xsd:boolean tags (<editHeading>, <detailHeading>, <editable>,
+         <required>, <allowAutoCreate>) accept ONLY true / false. Section display
+         labels go in <label>. Putting "Lead Information" in <editHeading> fails with
+         "'Lead Information' is not valid for type xsd:boolean" (Object Rule 8).
+
+         The standard Name field in every <layoutItems> needs
+         <behavior>Required</behavior>, NOT Edit (Object Rule 4).
+
+         Layout XML does NOT have <apiVersion>. (SFDX Rule 7)
+    -->
+    <layoutSections>
+        <editHeading>true</editHeading>
+        <detailHeading>true</detailHeading>
+        <label>My Section</label>
+        <layoutColumns>
+            <layoutItems>
+                <behavior>Required</behavior>
+                <field>Name</field>
+            </layoutItems>
+            <layoutItems>
+                <behavior>Edit</behavior>
+                <field>My_Field__c</field>
+            </layoutItems>
+        </layoutColumns>
+        <style>TwoColumnsTopToBottom</style>
+    </layoutSections>
+</Layout>
