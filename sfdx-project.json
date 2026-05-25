@@ -2,14 +2,10 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true,
-      "package": "Case_Transfer_Summary",
-      "versionName": "ver 0.1",
-      "versionNumber": "0.1.0.NEXT"
+      "default": true
     }
   ],
-  "name": "Case_Transfer_Summary",
   "namespace": "",
-  "sourceApiVersion": "60.0",
-  "sfdcLoginUrl": "https://login.salesforce.com"
+  "sfdcLoginUrl": "https://login.salesforce.com",
+  "sourceApiVersion": "60.0"
 }

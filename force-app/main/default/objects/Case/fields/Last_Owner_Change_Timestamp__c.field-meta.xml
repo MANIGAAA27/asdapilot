@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Last_Owner_Change_Timestamp__c</fullName>
+    <label>Last Owner Change Timestamp</label>
+    <description>Stores the timestamp of the last owner change event that triggered the summarization process. Populated by the Case_After_Update_Trigger_Summarization Flow.</description>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>
