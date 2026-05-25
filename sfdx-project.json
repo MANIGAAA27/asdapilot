@@ -10,6 +10,6 @@
   ],
   "name": "Case_Transfer_Summary",
   "namespace": "",
-  "sourceApiVersion": "60.0",
+  "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
 }
