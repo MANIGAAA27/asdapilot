@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary Error</label>
+    <pluralLabel>Case Transfer Summary Errors</pluralLabel>
+    <nameField>
+        <label>Case Transfer Summary Error Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTSE-{0000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+</CustomObject>

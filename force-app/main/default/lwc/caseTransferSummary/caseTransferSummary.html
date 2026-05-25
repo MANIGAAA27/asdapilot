@@ -1,0 +1,27 @@
+<template>
+    <lightning-card title="Case Transfer Summary" icon-name="standard:case_wrap_up">
+        <div class="slds-p-around_medium">
+            <template if:true={isLoading}>
+                <div class="slds-is-relative slds-m-vertical_large">
+                    <lightning-spinner alternative-text="Loading summary..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>An error occurred while loading the summary. Please contact your administrator.</h2>
+                </div>
+            </template>
+            <template if:false={isLoading}>
+                <template if:true={hasSummary}>
+                    <lightning-formatted-rich-text value={summary}></lightning-formatted-rich-text>
+                </template>
+                <template if:false={hasSummary}>
+                    <template if:false={error}>
+                        <p>No summary is available for this case.</p>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+</template>

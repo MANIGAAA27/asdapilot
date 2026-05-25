@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary</label>
+    <pluralLabel>Case Transfer Summaries</pluralLabel>
+    <nameField>
+        <label>Summary ID</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTS-{000000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ControlledByParent</sharingModel>
+    <description>Stores an automated summary generated during a case transfer or owner change event.</description>
+    <enableFeeds>false</enableFeeds>
+</CustomObject>
