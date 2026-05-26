@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Canonical template for a PermissionSet.
+         CRITICAL: PermissionSet XML REJECTS <apiVersion>. Do NOT add it. (SFDX Rule 7)
+         Every CustomObject or Apex class deployed in the same package should be
+         referenced here so end-users actually get access at deploy time.
+    -->
+    <label>My Feature Access</label>
+    <description>Grants CRUD on My_Object__c and access to MyService Apex methods.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- Apex class access — one entry per @AuraEnabled controller class in this package -->
+    <classAccesses>
+        <apexClass>MyController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- Object CRUD — one entry per __c object granted -->
+    <objectPermissions>
+        <object>My_Object__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Field-level — one entry per custom field to expose -->
+    <fieldPermissions>
+        <field>My_Object__c.My_Field__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+</PermissionSet>

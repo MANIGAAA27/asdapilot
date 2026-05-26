@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Transfer_Timestamp__c</fullName>
+    <label>Transfer Timestamp</label>
+    <description>The exact date/time when the case ownership change occurred. Used as the cutoff for data aggregation — only interactions before this timestamp are included in the summary.</description>
+    <type>DateTime</type>
+</CustomField>

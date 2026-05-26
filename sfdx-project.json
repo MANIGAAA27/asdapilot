@@ -3,13 +3,13 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "Case_Transfer_Summary",
+      "package": "Case_Summary_Transfer_1_0",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "Case_Transfer_Summary",
+  "name": "Case_Summary_Transfer_1_0",
   "namespace": "",
-  "sourceApiVersion": "60.0",
+  "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
 }

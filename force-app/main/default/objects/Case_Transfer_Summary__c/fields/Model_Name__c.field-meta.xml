@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Model_Name__c</fullName>
+    <label>Model Name</label>
+    <description>The name of the LLM model used to generate this summary (e.g., gpt-4). Stored for auditability and model performance tracking.</description>
+    <type>Text</type>
+    <length>100</length>
+    <required>false</required>
+</CustomField>
