@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary Access</label>
+    <description>Grants access to Case Transfer Summary objects, Apex service classes, and the LWC panel. Assign to support agents who handle transferred cases.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+
+    <!-- Apex controller for the caseSummaryPanel LWC -->
+    <classAccesses>
+        <apexClass>CaseSummaryController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- Object permissions — Case (required parent; MasterDetail dependency) -->
+    <objectPermissions>
+        <object>Case</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Object permissions — Case_Transfer_Summary__c (MasterDetail child; sharing via Case) -->
+    <objectPermissions>
+        <object>Case_Transfer_Summary__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Field permissions — Case_Transfer_Summary__c fields -->
+    <fieldPermissions>
+        <field>Case_Transfer_Summary__c.Summary_Text__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Transfer_Summary__c.Transfer_Timestamp__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Transfer_Summary__c.Model_Name__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Transfer_Summary__c.Model_Version__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Transfer_Summary__c.Generation_Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- Field permission for the Case custom field -->
+    <fieldPermissions>
+        <field>Case.Last_Owner_Change_Timestamp__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+</PermissionSet>

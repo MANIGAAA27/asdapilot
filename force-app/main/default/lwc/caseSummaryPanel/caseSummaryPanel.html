@@ -1,0 +1,29 @@
+<template>
+    <template lwc:if={hasSummary}>
+        <lightning-card
+            title="Case Transfer Summary"
+            icon-name="standard:case_comment"
+        >
+            <div class="slds-p-around_medium">
+                <template lwc:if={isLoading}>
+                    <lightning-spinner
+                        alternative-text="Loading case transfer summary..."
+                        size="small"
+                    ></lightning-spinner>
+                </template>
+                <template lwc:else>
+                    <p class="slds-text-body_regular slds-m-bottom_small">{summary.Summary_Text__c}</p>
+                    <div class="slds-text-body_small slds-text-color_weak">
+                        <span>Generated: {formattedTimestamp}</span>
+                        <span class="slds-m-left_small">
+                            Model: {summary.Model_Name__c} v{summary.Model_Version__c}
+                        </span>
+                    </div>
+                </template>
+            </div>
+        </lightning-card>
+    </template>
+    <template lwc:if={hasError}>
+        <div class="slds-p-around_medium slds-text-color_error">{errorMessage}</div>
+    </template>
+</template>
