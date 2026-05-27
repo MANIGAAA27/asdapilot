@@ -1,55 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>TestDataFactory</members>
-        <members>CaseDataAggregationService</members>
-        <members>CaseDataAggregationServiceTest</members>
-        <members>CaseTransferPayloadBuilder</members>
-        <members>CaseTransferPayloadBuilderTest</members>
-        <members>LLMCalloutService</members>
-        <members>LLMCalloutServiceMock</members>
-        <members>LLMCalloutServiceMockFailure</members>
-        <members>LLMCalloutServiceTest</members>
-        <members>CaseSummaryPersistenceService</members>
-        <members>CaseSummaryPersistenceServiceTest</members>
-        <members>CaseSummaryTransferService</members>
-        <members>CaseSummaryTransferServiceTest</members>
-        <members>CaseSummaryTransferQueueable</members>
-        <members>CaseSummaryTransferQueueableTest</members>
-        <members>CaseTriggerHandler</members>
-        <members>CaseTriggerHandlerTest</members>
-        <members>CaseSummaryController</members>
-        <members>CaseSummaryControllerTest</members>
-        <name>ApexClass</name>
+        <members>Account_Creation</members>
+        <name>Flow</name>
     </types>
     <types>
-        <members>CaseTrigger</members>
-        <name>ApexTrigger</name>
-    </types>
-    <types>
-        <members>Case_Transfer_Summary__c</members>
-        <name>CustomObject</name>
-    </types>
-    <types>
-        <members>Case_Transfer_Summary__c.Case__c</members>
-        <members>Case_Transfer_Summary__c.Summary_Text__c</members>
-        <members>Case_Transfer_Summary__c.Transfer_Timestamp__c</members>
-        <members>Case_Transfer_Summary__c.Model_Name__c</members>
-        <members>Case_Transfer_Summary__c.Model_Version__c</members>
-        <members>Case_Transfer_Summary__c.Generation_Status__c</members>
-        <members>Case.Last_Owner_Change_Timestamp__c</members>
-        <name>CustomField</name>
-    </types>
-    <types>
-        <members>caseSummaryPanel</members>
-        <name>LightningComponentBundle</name>
-    </types>
-    <types>
-        <members>Case_Transfer_Summary__c-Case Transfer Summary Layout</members>
-        <name>Layout</name>
-    </types>
-    <types>
-        <members>CaseTransferSummaryAccess</members>
+        <members>Account_Creation_User</members>
         <name>PermissionSet</name>
     </types>
     <version>62.0</version>

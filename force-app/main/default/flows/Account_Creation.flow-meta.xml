@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Screen Flow that guides users through creating a new Account record. Captures required fields (Account Name, Type, Industry) and optional fields (Phone, Website), validates inputs, creates the Account record, and displays a success confirmation with a link to the new record or a user-friendly error message if creation fails.</description>
+    <interviewLabel>Account Creation {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Account Creation</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <status>Active</status>
+
+    <!-- ═══════════════════════════════════════
+         DYNAMIC CHOICE SETS — Account Picklists
+         All same-type elements grouped together
+         per Salesforce Flow XSD ordering rules.
+         ═══════════════════════════════════════ -->
+    <dynamicChoiceSets>
+        <name>typeChoices</name>
+        <dataType>Picklist</dataType>
+        <picklistField>Type</picklistField>
+        <picklistObject>Account</picklistObject>
+    </dynamicChoiceSets>
+    <dynamicChoiceSets>
+        <name>industryChoices</name>
+        <dataType>Picklist</dataType>
+        <picklistField>Industry</picklistField>
+        <picklistObject>Account</picklistObject>
+    </dynamicChoiceSets>
+
+    <!-- ═══════════════════════════════════════
+         RECORD CREATE — Account
+         Maps screen inputs to Account fields.
+         Runs under current user context so org
+         sharing rules and FLS are respected.
+         On success  → SuccessScreen
+         On fault    → ErrorScreen
+         ═══════════════════════════════════════ -->
+    <recordCreates>
+        <name>CreateAccountRecord</name>
+        <label>Create Account Record</label>
+        <locationX>176</locationX>
+        <locationY>254</locationY>
+        <connector>
+            <targetReference>SuccessScreen</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>ErrorScreen</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <elementReference>AccountNameInput</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Type</field>
+            <value>
+                <elementReference>AccountTypeInput</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Industry</field>
+            <value>
+                <elementReference>AccountIndustryInput</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Phone</field>
+            <value>
+                <elementReference>AccountPhoneInput</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Website</field>
+            <value>
+                <elementReference>AccountWebsiteInput</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Account</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordCreates>
+
+    <!-- ═══════════════════════════════════════
+         SCREEN 1 — Data Collection
+         Captures Account Name (required), Type (required),
+         Industry (required), Phone (optional), Website (optional).
+         Screen-level required validation prevents progression
+         when mandatory fields are blank (AC-1, AC-2).
+         ═══════════════════════════════════════ -->
+    <screens>
+        <name>DataCollectionScreen</name>
+        <label>Create New Account</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <connector>
+            <targetReference>CreateAccountRecord</targetReference>
+        </connector>
+        <fields>
+            <name>AccountNameInput</name>
+            <dataType>String</dataType>
+            <fieldText>Account Name</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>AccountTypeInput</name>
+            <choiceReferences>typeChoices</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Account Type</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>AccountIndustryInput</name>
+            <choiceReferences>industryChoices</choiceReferences>
+            <dataType>String</dataType>
+            <fieldText>Industry</fieldText>
+            <fieldType>DropdownBox</fieldType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>AccountPhoneInput</name>
+            <dataType>String</dataType>
+            <fieldText>Phone</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+        <fields>
+            <name>AccountWebsiteInput</name>
+            <dataType>String</dataType>
+            <fieldText>Website</fieldText>
+            <fieldType>InputField</fieldType>
+            <isRequired>false</isRequired>
+        </fields>
+    </screens>
+
+    <!-- ═══════════════════════════════════════
+         SCREEN 2 — Success Confirmation (AC-4)
+         Displays the Account Name and a direct
+         Lightning link to the newly created record.
+         ═══════════════════════════════════════ -->
+    <screens>
+        <name>SuccessScreen</name>
+        <label>Account Created Successfully</label>
+        <locationX>176</locationX>
+        <locationY>374</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>SuccessMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Account Created Successfully!&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;The Account &lt;strong&gt;{!AccountNameInput}&lt;/strong&gt; has been created.&lt;/p&gt;&lt;p&gt;&lt;a href="/lightning/r/Account/{!CreateAccountRecord}/view"&gt;View Account Record&lt;/a&gt;&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+
+    <!-- ═══════════════════════════════════════
+         SCREEN 3 — Error / Fault Path (AC-5)
+         Reached when CreateAccountRecord raises a fault.
+         Displays the platform fault message without
+         exposing a stack trace. Advises the user to
+         contact an administrator if the issue persists.
+         ═══════════════════════════════════════ -->
+    <screens>
+        <name>ErrorScreen</name>
+        <label>Account Creation Error</label>
+        <locationX>440</locationX>
+        <locationY>254</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>ErrorMessage</name>
+            <fieldText>&lt;p&gt;&lt;strong&gt;An Error Occurred&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;The Account could not be created. {!$Flow.FaultMessage}&lt;/p&gt;&lt;p&gt;Please review the information entered and try again. If the issue persists, contact your Salesforce administrator.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+
+    <!-- ═══════════════════════════════════════
+         START — entry point for the flow
+         ═══════════════════════════════════════ -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>DataCollectionScreen</targetReference>
+        </connector>
+    </start>
+
+</Flow>

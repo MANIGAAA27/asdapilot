@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "Case_Summary_Transfer_1_0",
+      "package": "Account_Creation",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "Case_Summary_Transfer_1_0",
+  "name": "Account_Creation",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
