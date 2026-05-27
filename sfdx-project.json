@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "File_Viewer",
+      "package": "File_Viewer_Bug_Fix",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "File_Viewer",
+  "name": "File_Viewer_Bug_Fix",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"

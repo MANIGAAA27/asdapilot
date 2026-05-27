@@ -144,7 +144,7 @@ private class FileServiceTest {
         Test.stopTest();
 
         // Should include at minimum the account file (1) plus the contact file (1)
-        System.assert(files.size() >= 1, 'Should find at least one file; found: ' + files.size());
+        System.assertEquals(2, files.size(), 'Expected 1 account file + 1 contact file; found: ' + files.size());
     }
 
     @isTest

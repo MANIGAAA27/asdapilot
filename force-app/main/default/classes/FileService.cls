@@ -14,7 +14,7 @@
 public with sharing class FileService {
 
     /** Maximum child relationships to traverse when collecting related records. */
-    private static final Integer MAX_CHILD_RELATIONSHIPS = 10;
+    private static final Integer MAX_CHILD_RELATIONSHIPS = 25;
 
     /** Maximum child records returned per relationship query. */
     private static final Integer MAX_CHILD_RECORDS_PER_REL = 50;

@@ -3,13 +3,7 @@
   <types>
     <members>FileService</members>
     <members>FileServiceTest</members>
-    <members>SecurityService</members>
-    <members>SecurityServiceTest</members>
     <name>ApexClass</name>
-  </types>
-  <types>
-    <members>fileViewer</members>
-    <name>LightningComponentBundle</name>
   </types>
   <version>59.0</version>
 </Package>
