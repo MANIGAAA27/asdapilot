@@ -1,0 +1,87 @@
+<template>
+    <div class="slds-form-element">
+        <label class="slds-form-element__label" for="search-input">
+            {searchLabel}
+        </label>
+        <div class="slds-form-element__control slds-input-has-icon slds-input-has-icon_right">
+            <lightning-icon icon-name="utility:search"
+                            size="x-small"
+                            class="slds-icon slds-input__icon slds-input__icon_right slds-icon-text-default"
+                            alternative-text="Search">
+            </lightning-icon>
+            <input type="text"
+                   id="search-input"
+                   class="slds-input"
+                   placeholder="Search by name, email, or phone..."
+                   value={searchTerm}
+                   oninput={handleSearchInput}
+                   onkeydown={handleKeyDown}
+                   aria-autocomplete="list"
+                   aria-expanded={hasResults}
+                   aria-controls="search-results-listbox"
+                   autocomplete="off" />
+        </div>
+
+        <!-- Loading indicator -->
+        <template if:true={isSearching}>
+            <div class="slds-p-top_x-small">
+                <lightning-spinner alternative-text="Searching..." size="x-small"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Search Results Dropdown -->
+        <template if:true={hasResults}>
+            <div id="search-results-listbox"
+                 class="slds-dropdown slds-dropdown_length-5 slds-dropdown_fluid"
+                 role="listbox">
+                <ul class="slds-listbox slds-listbox_vertical" role="presentation">
+                    <template for:each={searchResults} for:item="result">
+                        <li key={result.recordId}
+                            role="presentation"
+                            class="slds-listbox__item">
+                            <span class="slds-media slds-listbox__option slds-listbox__option_entity slds-listbox__option_has-meta"
+                                  role="option"
+                                  data-record-id={result.recordId}
+                                  data-record-name={result.recordName}
+                                  onclick={handleResultClick}
+                                  onkeypress={handleResultKeyPress}
+                                  tabindex="0">
+                                <span class="slds-media__figure slds-listbox__option-icon">
+                                    <lightning-icon icon-name={result.iconName}
+                                                    size="small"
+                                                    alternative-text={result.objectType}>
+                                    </lightning-icon>
+                                </span>
+                                <span class="slds-media__body">
+                                    <span class="slds-listbox__option-text slds-listbox__option-text_entity">
+                                        {result.recordName}
+                                    </span>
+                                    <span class="slds-listbox__option-meta slds-listbox__option-meta_entity">
+                                        {result.additionalInfo}
+                                    </span>
+                                    <span class="slds-badge slds-m-left_x-small" if:true={result.matchedOn}>
+                                        Matched on: {result.matchedOn}
+                                    </span>
+                                </span>
+                            </span>
+                        </li>
+                    </template>
+                </ul>
+            </div>
+        </template>
+
+        <!-- No Results Message -->
+        <template if:true={showNoResults}>
+            <div class="slds-p-top_x-small slds-text-color_weak slds-text-body_small">
+                No matching records found.
+            </div>
+        </template>
+
+        <!-- Search Error -->
+        <template if:true={searchError}>
+            <div class="slds-p-top_x-small slds-text-color_error slds-text-body_small">
+                {searchError}
+            </div>
+        </template>
+    </div>
+</template>

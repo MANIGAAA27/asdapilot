@@ -1,321 +1,460 @@
 /**
  * @file              LeadConversionService.cls
- * @description       Invocable Apex service that converts a Lead record into Account,
- *                    Contact, and optional Opportunity records, replicating the standard
- *                    Salesforce LEX lead conversion process with full field mapping control.
- *                    Designed to be called from the Lead_Conversion_Screen_Flow screen flow.
- * @author            ASDA Dev Agent (Claude Code)
+ * @description       Service layer encapsulating all Lead conversion business logic.
+ *                    Handles field mapping, record creation/association, Lead status
+ *                    update, and relationship establishment. Enforces FLS via
+ *                    Security.stripInaccessible and respects sharing rules.
+ * @author            ASDA Dev Agent
  * @created           2026-05-28
  * @lastModified      2026-05-28
- * @group             LeadManagement
+ * @group             LeadConversion
  *
- * @dependencies      (none in this changeset)
- * @calledBy          Lead_Conversion_Screen_Flow (Flow apex action)
+ * @dependencies      LeadConversionException
+ * @calledBy          LeadConversionController
  * @testClass         LeadConversionServiceTest
  *
- * @see               LLD - Salesforce Flows for Lead Conversion
- */
-
-/**
- * Service providing Lead-to-Account/Contact/Opportunity conversion logic
- * via a single @InvocableMethod entry point.
- *
- * Responsibilities:
- *   - Accept conversion parameters collected by the Lead Conversion Screen Flow.
- *   - Resolve or create Account, Contact, and Opportunity with accurate field mapping.
- *   - Invoke Database.convertLead() to mark the Lead IsConverted and link child records.
- *   - Return IDs of the resulting records plus success/error state.
- *
- * Threading: Synchronous only — invoked from Screen Flow action; not batch-safe.
- *
- * @testClass LeadConversionServiceTest
+ * @see               LLD - LWC Lead Conversion (Keneland Technology)
  */
 public with sharing class LeadConversionService {
 
-    /** Sentinel string passed by the Flow to indicate "create a new record". */
-    @TestVisible
-    private static final String NEW_RECORD_SENTINEL = 'new';
-
     // ─────────────────────────────────────────────────────────────────────────
-    // Inner request / result classes
+    // Inner wrapper classes
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Input envelope for the Lead conversion invocable action.
-     * Every field maps to a Flow variable or screen-component output.
+     * Wrapper returned to the LWC containing the Lead record and pre-mapped
+     * field values for Account, Contact, and Opportunity.
+     */
+    public class LeadData {
+        @AuraEnabled public Lead leadRecord { get; set; }
+        @AuraEnabled public AccountFields accountFields { get; set; }
+        @AuraEnabled public ContactFields contactFields { get; set; }
+        @AuraEnabled public OpportunityFields opportunityFields { get; set; }
+        @AuraEnabled public Date fiscalQuarterEndDate { get; set; }
+    }
+
+    /** Mapped Account field values derived from the Lead. */
+    public class AccountFields {
+        @AuraEnabled public String name { get; set; }
+        @AuraEnabled public String industry { get; set; }
+        @AuraEnabled public String website { get; set; }
+        @AuraEnabled public String phone { get; set; }
+        @AuraEnabled public String billingStreet { get; set; }
+        @AuraEnabled public String billingCity { get; set; }
+        @AuraEnabled public String billingState { get; set; }
+        @AuraEnabled public String billingPostalCode { get; set; }
+    }
+
+    /** Mapped Contact field values derived from the Lead. */
+    public class ContactFields {
+        @AuraEnabled public String firstName { get; set; }
+        @AuraEnabled public String lastName { get; set; }
+        @AuraEnabled public String title { get; set; }
+        @AuraEnabled public String email { get; set; }
+        @AuraEnabled public String mobilePhone { get; set; }
+    }
+
+    /** Mapped Opportunity field values derived from the Lead. */
+    public class OpportunityFields {
+        @AuraEnabled public String name { get; set; }
+        @AuraEnabled public Decimal amount { get; set; }
+        @AuraEnabled public Date closeDate { get; set; }
+    }
+
+    /**
+     * Request payload sent from the LWC when the user clicks Convert.
+     * All Id fields are nullable — null means "create new".
      */
     public class ConversionRequest {
-        @InvocableVariable(required=true label='Lead ID')
-        public Id leadId;
+        @AuraEnabled public Id leadId { get; set; }
 
-        /** ID of an existing Account, or the sentinel value "new". */
-        @InvocableVariable(label='Account Choice (record ID or "new")')
-        public String accountChoice;
+        // Account
+        @AuraEnabled public Id existingAccountId { get; set; }
+        @AuraEnabled public String accountName { get; set; }
+        @AuraEnabled public String accountIndustry { get; set; }
+        @AuraEnabled public String accountWebsite { get; set; }
+        @AuraEnabled public String accountPhone { get; set; }
+        @AuraEnabled public String accountBillingStreet { get; set; }
+        @AuraEnabled public String accountBillingCity { get; set; }
+        @AuraEnabled public String accountBillingState { get; set; }
+        @AuraEnabled public String accountBillingPostalCode { get; set; }
 
-        @InvocableVariable(label='New Account Name')
-        public String newAccountName;
+        // Contact
+        @AuraEnabled public Id existingContactId { get; set; }
+        @AuraEnabled public String contactFirstName { get; set; }
+        @AuraEnabled public String contactLastName { get; set; }
+        @AuraEnabled public String contactTitle { get; set; }
+        @AuraEnabled public String contactEmail { get; set; }
+        @AuraEnabled public String contactMobilePhone { get; set; }
 
-        @InvocableVariable(label='New Account Industry')
-        public String newAccountIndustry;
-
-        @InvocableVariable(label='New Account Website')
-        public String newAccountWebsite;
-
-        @InvocableVariable(label='New Account Phone')
-        public String newAccountPhone;
-
-        @InvocableVariable(label='New Account Billing Street')
-        public String newAccountBillingStreet;
-
-        @InvocableVariable(label='New Account Billing City')
-        public String newAccountBillingCity;
-
-        @InvocableVariable(label='New Account Billing State')
-        public String newAccountBillingState;
-
-        @InvocableVariable(label='New Account Billing Postal Code')
-        public String newAccountBillingPostalCode;
-
-        /** ID of an existing Contact, or the sentinel value "new". */
-        @InvocableVariable(label='Contact Choice (record ID or "new")')
-        public String contactChoice;
-
-        @InvocableVariable(label='New Contact First Name')
-        public String newContactFirstName;
-
-        @InvocableVariable(label='New Contact Last Name')
-        public String newContactLastName;
-
-        @InvocableVariable(label='New Contact Title')
-        public String newContactTitle;
-
-        @InvocableVariable(label='New Contact Email')
-        public String newContactEmail;
-
-        @InvocableVariable(label='New Contact Mobile Phone')
-        public String newContactMobilePhone;
-
-        @InvocableVariable(label='Create Opportunity')
-        public Boolean createOpportunity;
-
-        @InvocableVariable(label='Opportunity Name')
-        public String opportunityName;
-
-        @InvocableVariable(label='Opportunity Close Date')
-        public Date opportunityCloseDate;
-
-        @InvocableVariable(label='Opportunity Amount')
-        public Decimal opportunityAmount;
+        // Opportunity
+        @AuraEnabled public Boolean createOpportunity { get; set; }
+        @AuraEnabled public Id existingOpportunityId { get; set; }
+        @AuraEnabled public String opportunityName { get; set; }
+        @AuraEnabled public Decimal opportunityAmount { get; set; }
+        @AuraEnabled public Date opportunityCloseDate { get; set; }
     }
 
     /**
-     * Output envelope returned to the Flow after conversion completes.
+     * Result returned to the LWC after a successful conversion.
      */
     public class ConversionResult {
-        @InvocableVariable(label='Converted Account ID')
-        public Id accountId;
-
-        @InvocableVariable(label='Converted Contact ID')
-        public Id contactId;
-
-        @InvocableVariable(label='Converted Opportunity ID')
-        public Id opportunityId;
-
-        @InvocableVariable(label='Is Success')
-        public Boolean isSuccess;
-
-        @InvocableVariable(label='Error Message')
-        public String errorMessage;
+        @AuraEnabled public Id accountId { get; set; }
+        @AuraEnabled public String accountName { get; set; }
+        @AuraEnabled public Id contactId { get; set; }
+        @AuraEnabled public String contactName { get; set; }
+        @AuraEnabled public Id opportunityId { get; set; }
+        @AuraEnabled public String opportunityName { get; set; }
+        @AuraEnabled public Boolean opportunityCreated { get; set; }
+        @AuraEnabled public String successMessage { get; set; }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // Invocable entry point
+    // Public service methods
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
-     * Converts a Lead into Account, Contact, and optional Opportunity records.
+     * Loads the Lead record and builds pre-mapped field wrappers for the modal.
      *
-     * Process:
-     * 1. Resolve or create the target Account from mapped Lead fields.
-     * 2. Resolve or create the target Contact linked to the Account.
-     * 3. Call Database.convertLead() with doNotCreateOpportunity=true so this
-     *    service retains full control over Opportunity field mapping.
-     * 4. Optionally insert an Opportunity mapped from the Lead, linked to the Account.
+     * @param  leadId   Id of the Lead to load.
+     * @return          LeadData wrapper with mapped fields.
+     * @throws          LeadConversionException when Lead not found or already converted.
      *
-     * @param  requests  Single-element list supplied by the Flow runtime.
-     * @return           Single-element list carrying IDs and success/error state.
-     *
-     * @calledBy  Lead_Conversion_Screen_Flow
-     * @testMethods test_convertLead_newAccountNewContact_succeeds,
-     *              test_convertLead_existingAccount_succeeds,
-     *              test_convertLead_noOpportunity_succeeds,
-     *              test_convertLead_existingContact_succeeds
+     * @calledBy    LeadConversionController.getLeadData
+     * @testMethods test_getLeadData_validId_returnsWrapper, test_getLeadData_convertedLead_throws,
+     *              test_getLeadData_notFound_throws
      */
-    @InvocableMethod(
-        label='Convert Lead'
-        description='Converts a Lead into Account, Contact, and Opportunity records.'
-    )
-    public static List<ConversionResult> convertLead(List<ConversionRequest> requests) {
-        List<ConversionResult> results = new List<ConversionResult>();
-        for (ConversionRequest req : requests) {
-            results.add(processConversion(req));
+    public static LeadData getLeadData(Id leadId) {
+        if (leadId == null) {
+            throw new LeadConversionException('Lead Id is required.');
         }
-        return results;
+
+        List<Lead> leads = [
+            SELECT Id, FirstName, LastName, Company, Title, Email, Phone,
+                   MobilePhone, Industry, Website, Street, City, State,
+                   PostalCode, IsConverted, Status
+            FROM Lead
+            WHERE Id = :leadId
+            WITH SECURITY_ENFORCED
+            LIMIT 1
+        ];
+
+        if (leads.isEmpty()) {
+            throw new LeadConversionException('Lead record not found.');
+        }
+
+        Lead leadRecord = leads[0];
+
+        if (leadRecord.IsConverted) {
+            throw new LeadConversionException('This Lead has already been converted.');
+        }
+
+        LeadData data = new LeadData();
+        data.leadRecord = leadRecord;
+        data.accountFields = buildAccountFields(leadRecord);
+        data.contactFields = buildContactFields(leadRecord);
+        data.opportunityFields = buildOpportunityFields(leadRecord);
+        data.fiscalQuarterEndDate = getFiscalQuarterEndDate();
+
+        return data;
+    }
+
+    /**
+     * Executes the full Lead conversion: creates or links Account, Contact,
+     * and optionally Opportunity, then marks the Lead as Converted.
+     *
+     * @param  req   ConversionRequest populated by the LWC modal.
+     * @return       ConversionResult with Ids and names of created/linked records.
+     * @throws       LeadConversionException on validation or DML failure.
+     *
+     * @calledBy    LeadConversionController.convertLead
+     * @testMethods test_convertLead_newRecords_succeeds, test_convertLead_existingAccount_succeeds,
+     *              test_convertLead_skipOpportunity_succeeds, test_convertLead_missingRequired_throws
+     */
+    public static ConversionResult convertLead(ConversionRequest req) {
+        validateConversionRequest(req);
+
+        Savepoint sp = Database.setSavepoint();
+        try {
+            // Step 1 — Account
+            Id accountId = resolveAccount(req);
+
+            // Step 2 — Contact
+            Id contactId = resolveContact(req, accountId);
+
+            // Step 3 — Opportunity (optional)
+            Id opportunityId = null;
+            Boolean oppCreated = false;
+            if (req.createOpportunity == true) {
+                if (req.existingOpportunityId != null) {
+                    opportunityId = req.existingOpportunityId;
+                } else {
+                    opportunityId = createOpportunity(req, accountId);
+                    oppCreated = true;
+                }
+            }
+
+            // Step 4 — Mark Lead converted
+            markLeadConverted(req.leadId, accountId, contactId, opportunityId);
+
+            // Build result
+            ConversionResult result = new ConversionResult();
+            result.accountId = accountId;
+            result.contactId = contactId;
+            result.opportunityId = opportunityId;
+            result.opportunityCreated = oppCreated;
+            result.successMessage = buildSuccessMessage(oppCreated);
+
+            // Populate display names
+            populateResultNames(result);
+
+            return result;
+
+        } catch (LeadConversionException lce) {
+            Database.rollback(sp);
+            throw lce;
+        } catch (Exception ex) {
+            Database.rollback(sp);
+            throw new LeadConversionException('Conversion failed: ' + ex.getMessage());
+        }
+    }
+
+    /**
+     * Returns the last day of the current fiscal quarter.
+     * Fiscal quarters are calendar-aligned (Q1=Jan-Mar, Q2=Apr-Jun,
+     * Q3=Jul-Sep, Q4=Oct-Dec).
+     *
+     * @return  Date — last day of the current fiscal quarter.
+     *
+     * @calledBy    LeadConversionController.getFiscalQuarterEndDate, getLeadData
+     * @testMethods test_getFiscalQuarterEndDate_returnsLastDayOfQuarter
+     */
+    public static Date getFiscalQuarterEndDate() {
+        Date today = Date.today();
+        Integer month = today.month();
+        Integer year = today.year();
+
+        // Determine quarter end month
+        Integer quarterEndMonth;
+        if (month <= 3) {
+            quarterEndMonth = 3;
+        } else if (month <= 6) {
+            quarterEndMonth = 6;
+        } else if (month <= 9) {
+            quarterEndMonth = 9;
+        } else {
+            quarterEndMonth = 12;
+        }
+
+        // Last day of the quarter end month
+        Integer lastDay = Date.daysInMonth(year, quarterEndMonth);
+        return Date.newInstance(year, quarterEndMonth, lastDay);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Private helpers
     // ─────────────────────────────────────────────────────────────────────────
 
-    /** Orchestrates a single Lead conversion and wraps any exception in the result. */
-    private static ConversionResult processConversion(ConversionRequest req) {
-        ConversionResult res = new ConversionResult();
-        try {
-            Id resolvedAccountId = resolveAccount(req);
-            Id resolvedContactId = resolveContact(req, resolvedAccountId);
+    /** Builds AccountFields wrapper from a Lead record. */
+    private static AccountFields buildAccountFields(Lead leadRecord) {
+        AccountFields af = new AccountFields();
+        af.name = leadRecord.Company;
+        af.industry = leadRecord.Industry;
+        af.website = leadRecord.Website;
+        af.phone = leadRecord.Phone;
+        af.billingStreet = leadRecord.Street;
+        af.billingCity = leadRecord.City;
+        af.billingState = leadRecord.State;
+        af.billingPostalCode = leadRecord.PostalCode;
+        return af;
+    }
 
-            String convertedStatus = getConvertedStatus();
-            Database.LeadConvert lc = new Database.LeadConvert();
-            lc.setLeadId(req.leadId);
-            lc.setConvertedStatus(convertedStatus);
-            lc.setAccountId(resolvedAccountId);
-            lc.setContactId(resolvedContactId);
-            lc.setDoNotCreateOpportunity(true);
-
-            Database.LeadConvertResult lcr = Database.convertLead(lc);
-            if (!lcr.isSuccess()) {
-                res.isSuccess = false;
-                res.errorMessage = lcr.getErrors()[0].getMessage();
-                return res;
-            }
-
-            Id opportunityId = null;
-            if (req.createOpportunity == true) {
-                opportunityId = createOpportunity(req, lcr.getAccountId());
-            }
-
-            res.isSuccess      = true;
-            res.accountId      = lcr.getAccountId();
-            res.contactId      = lcr.getContactId();
-            res.opportunityId  = opportunityId;
-
-        } catch (Exception ex) {
-            res.isSuccess   = false;
-            res.errorMessage = ex.getMessage();
-        }
-        return res;
+    /** Builds ContactFields wrapper from a Lead record. */
+    private static ContactFields buildContactFields(Lead leadRecord) {
+        ContactFields cf = new ContactFields();
+        cf.firstName = leadRecord.FirstName;
+        cf.lastName = leadRecord.LastName;
+        cf.title = leadRecord.Title;
+        cf.email = leadRecord.Email;
+        cf.mobilePhone = leadRecord.MobilePhone;
+        return cf;
     }
 
     /**
-     * Returns the existing Account Id from the request, or inserts a new Account
-     * from the mapped Lead fields.
-     *
-     * @param  req  Conversion request carrying choice and new-account field values.
-     * @return      Salesforce Id of the resolved Account.
+     * Builds OpportunityFields wrapper from a Lead record.
+     * Amount defaults to null — the user can enter it in the modal.
+     * The Lead.Amount__c custom field is intentionally omitted here to avoid
+     * a compile-time field-existence dependency; the field is still deployed
+     * via objects/Lead/fields/Amount__c.field-meta.xml and can be wired in
+     * once confirmed present in the target org.
+     */
+    private static OpportunityFields buildOpportunityFields(Lead leadRecord) {
+        OpportunityFields oppFields = new OpportunityFields();
+        oppFields.name = leadRecord.Company;
+        oppFields.amount = null;
+        oppFields.closeDate = getFiscalQuarterEndDate();
+        return oppFields;
+    }
+
+    /** Validates required fields on the ConversionRequest. */
+    private static void validateConversionRequest(ConversionRequest req) {
+        if (req == null) {
+            throw new LeadConversionException('Conversion request is required.');
+        }
+        if (req.leadId == null) {
+            throw new LeadConversionException('Lead Id is required.');
+        }
+        if (req.existingAccountId == null && String.isBlank(req.accountName)) {
+            throw new LeadConversionException('Account Name is required when creating a new Account.');
+        }
+        if (req.existingContactId == null && String.isBlank(req.contactLastName)) {
+            throw new LeadConversionException('Contact Last Name is required when creating a new Contact.');
+        }
+        if (req.createOpportunity == true
+                && req.existingOpportunityId == null
+                && String.isBlank(req.opportunityName)) {
+            throw new LeadConversionException('Opportunity Name is required when creating a new Opportunity.');
+        }
+    }
+
+    /**
+     * Returns an existing Account Id or creates a new Account and returns its Id.
      */
     private static Id resolveAccount(ConversionRequest req) {
-        if (String.isNotBlank(req.accountChoice) && req.accountChoice != NEW_RECORD_SENTINEL) {
-            return (Id) req.accountChoice;
+        if (req.existingAccountId != null) {
+            return req.existingAccountId;
         }
-        Account acct = new Account(
-            Name              = req.newAccountName,
-            Industry          = req.newAccountIndustry,
-            Website           = req.newAccountWebsite,
-            Phone             = req.newAccountPhone,
-            BillingStreet     = req.newAccountBillingStreet,
-            BillingCity       = req.newAccountBillingCity,
-            BillingState      = req.newAccountBillingState,
-            BillingPostalCode = req.newAccountBillingPostalCode
-        );
-        insert acct;
-        return acct.Id;
+
+        Account acct = new Account();
+        acct.Name = req.accountName;
+        acct.Industry = req.accountIndustry;
+        acct.Website = req.accountWebsite;
+        acct.Phone = req.accountPhone;
+        acct.BillingStreet = req.accountBillingStreet;
+        acct.BillingCity = req.accountBillingCity;
+        acct.BillingState = req.accountBillingState;
+        acct.BillingPostalCode = req.accountBillingPostalCode;
+
+        SObjectAccessDecision decision = Security.stripInaccessible(
+            AccessType.CREATABLE, new List<Account>{ acct });
+        List<Account> sanitised = (List<Account>) decision.getRecords();
+        insert sanitised;
+        return sanitised[0].Id;
     }
 
     /**
-     * Returns the existing Contact Id from the request, or inserts a new Contact
-     * from the mapped Lead fields linked to the given Account.
-     *
-     * @param  req        Conversion request carrying choice and new-contact field values.
-     * @param  accountId  The resolved Account Id to associate the new Contact with.
-     * @return            Salesforce Id of the resolved Contact.
+     * Returns an existing Contact Id or creates a new Contact and returns its Id.
      */
     private static Id resolveContact(ConversionRequest req, Id accountId) {
-        if (String.isNotBlank(req.contactChoice) && req.contactChoice != NEW_RECORD_SENTINEL) {
-            return (Id) req.contactChoice;
+        if (req.existingContactId != null) {
+            return req.existingContactId;
         }
-        Contact con = new Contact(
-            FirstName   = req.newContactFirstName,
-            LastName    = req.newContactLastName,
-            Title       = req.newContactTitle,
-            Email       = req.newContactEmail,
-            MobilePhone = req.newContactMobilePhone,
-            AccountId   = accountId
-        );
-        insert con;
-        return con.Id;
+
+        Contact con = new Contact();
+        con.FirstName = req.contactFirstName;
+        con.LastName = req.contactLastName;
+        con.Title = req.contactTitle;
+        con.Email = req.contactEmail;
+        con.MobilePhone = req.contactMobilePhone;
+        con.AccountId = accountId;
+
+        SObjectAccessDecision decision = Security.stripInaccessible(
+            AccessType.CREATABLE, new List<Contact>{ con });
+        List<Contact> sanitised = (List<Contact>) decision.getRecords();
+        insert sanitised;
+        return sanitised[0].Id;
     }
 
     /**
-     * Inserts an Opportunity from the mapped Lead fields and links it to the Account.
-     *
-     * @param  req        Conversion request with opportunity field values.
-     * @param  accountId  The resolved Account Id.
-     * @return            New Opportunity Id.
+     * Creates a new Opportunity and returns its Id.
      */
     private static Id createOpportunity(ConversionRequest req, Id accountId) {
-        String oppName = String.isBlank(req.opportunityName)
-            ? 'Converted Lead Opportunity'
-            : req.opportunityName;
-        Date closeDate = req.opportunityCloseDate != null
+        Opportunity opp = new Opportunity();
+        opp.Name = req.opportunityName;
+        opp.AccountId = accountId;
+        opp.Amount = req.opportunityAmount;
+        opp.CloseDate = req.opportunityCloseDate != null
             ? req.opportunityCloseDate
-            : Date.today().addDays(90);
+            : getFiscalQuarterEndDate();
+        opp.StageName = 'Prospecting';
 
-        Opportunity opp = new Opportunity(
-            Name      = oppName,
-            AccountId = accountId,
-            StageName = getDefaultOpportunityStage(),
-            CloseDate = closeDate,
-            Amount    = req.opportunityAmount
-        );
-        insert opp;
-        return opp.Id;
+        SObjectAccessDecision decision = Security.stripInaccessible(
+            AccessType.CREATABLE, new List<Opportunity>{ opp });
+        List<Opportunity> sanitised = (List<Opportunity>) decision.getRecords();
+        insert sanitised;
+        return sanitised[0].Id;
     }
 
-    /** Returns the MasterLabel of the first active converted LeadStatus. */
-    private static String getConvertedStatus() {
-        List<LeadStatus> statuses = [
+    /**
+     * Updates the Lead record to mark it as Converted using the standard
+     * Database.convertLead API.
+     */
+    private static void markLeadConverted(
+            Id leadId, Id accountId, Id contactId, Id opportunityId) {
+
+        Database.LeadConvert lc = new Database.LeadConvert();
+        lc.setLeadId(leadId);
+        lc.setAccountId(accountId);
+        lc.setContactId(contactId);
+        lc.setDoNotCreateOpportunity(opportunityId == null);
+        if (opportunityId != null) {
+            lc.setOpportunityId(opportunityId);
+        }
+
+        LeadStatus convertedStatus = [
             SELECT MasterLabel
             FROM LeadStatus
             WHERE IsConverted = true
-            WITH SECURITY_ENFORCED
             LIMIT 1
         ];
-        if (statuses.isEmpty()) {
-            throw new LeadConversionServiceException('No converted Lead Status found in this org.');
+        lc.setConvertedStatus(convertedStatus.MasterLabel);
+
+        List<Database.LeadConvertResult> results =
+            Database.convertLead(new List<Database.LeadConvert>{ lc });
+
+        for (Database.LeadConvertResult lcr : results) {
+            if (!lcr.isSuccess()) {
+                String errorMsg = '';
+                for (Database.Error err : lcr.getErrors()) {
+                    errorMsg += err.getMessage() + ' ';
+                }
+                throw new LeadConversionException('Lead conversion failed: ' + errorMsg.trim());
+            }
         }
-        return statuses[0].MasterLabel;
     }
 
-    /** Returns the MasterLabel of the first active Opportunity Stage, ordered by SortOrder. */
-    private static String getDefaultOpportunityStage() {
-        List<OpportunityStage> stages = [
-            SELECT MasterLabel
-            FROM OpportunityStage
-            WHERE IsActive = true
-            WITH SECURITY_ENFORCED
-            ORDER BY SortOrder ASC
-            LIMIT 1
-        ];
-        if (stages.isEmpty()) {
-            throw new LeadConversionServiceException('No active Opportunity Stage found in this org.');
+    /** Populates display names on the ConversionResult for the success toast. */
+    private static void populateResultNames(ConversionResult result) {
+        if (result.accountId != null) {
+            List<Account> accts = [SELECT Name FROM Account WHERE Id = :result.accountId LIMIT 1];
+            if (!accts.isEmpty()) {
+                result.accountName = accts[0].Name;
+            }
         }
-        return stages[0].MasterLabel;
+        if (result.contactId != null) {
+            List<Contact> cons = [
+                SELECT Name FROM Contact WHERE Id = :result.contactId LIMIT 1
+            ];
+            if (!cons.isEmpty()) {
+                result.contactName = cons[0].Name;
+            }
+        }
+        if (result.opportunityId != null) {
+            List<Opportunity> opps = [
+                SELECT Name FROM Opportunity WHERE Id = :result.opportunityId LIMIT 1
+            ];
+            if (!opps.isEmpty()) {
+                result.opportunityName = opps[0].Name;
+            }
+        }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // Custom exception
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** Thrown when the org is not configured correctly for Lead conversion. */
-    public class LeadConversionServiceException extends Exception {}
+    /** Builds a user-friendly success message. */
+    private static String buildSuccessMessage(Boolean oppCreated) {
+        String msg = 'Lead successfully converted. Account and Contact records have been created or linked.';
+        if (oppCreated) {
+            msg += ' An Opportunity has also been created.';
+        }
+        return msg;
+    }
 }

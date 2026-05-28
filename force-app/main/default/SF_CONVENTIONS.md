@@ -88,6 +88,205 @@ If you can't answer YES to every applicable item, fix it BEFORE moving to the ne
 
 ---
 
+## Screen Flow & Auto-Launched Flow Rules (violations cause deploy rejections)
+
+If the LLD describes a UI wizard, multi-step intake form, approval workflow, or any user-driven sequence, you MUST emit a `.flow-meta.xml` file under `force-app/main/default/flows/`. **Do not lower a Flow specification to Apex** — Salesforce expects a Flow component, the LLD declares it as such, and the operator's design intent is to be screen-flow-editable in Setup. Building it in Apex looks like the agent skipped the spec.
+
+The canonical template at `.sfdx-templates/sfdx/Flow.flow-meta.xml` covers the common shape. Read it BEFORE writing your first Flow — it encodes every rule below.
+
+### 1. Root + envelope
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>...</label>
+    <description>...</description>
+    <interviewLabel>...</interviewLabel>
+    <processType>Flow</processType>            <!-- Flow (Screen Flow) | AutoLaunchedFlow | RecordTriggered -->
+    <status>Active</status>                     <!-- Active | Draft -->
+    <runInMode>SystemModeWithSharing</runInMode>  <!-- SystemModeWithSharing | SystemModeWithoutSharing | DefaultMode -->
+    ...
+</Flow>
+```
+
+- **NO `<apiVersion>`** on Flow XML (Rule 7 in SFDX Structure Rules). Including it produces `Element ...apiVersion invalid at this location in type Flow`.
+- `<status>Active</status>` is required to be deployable and editable from Setup. `Draft` deploys but cannot be invoked.
+- For RecordTriggered flows: also add `<triggerType>RecordAfterSave</triggerType>` and a `<start>` block with `<object>...</object>`, `<recordTriggerType>Create|Update|CreateAndUpdate</recordTriggerType>`, and `<triggerType>RecordAfterSave|RecordBeforeSave|RecordAfterDelete</triggerType>`.
+
+### 2. The `<start>` block (every Flow needs exactly one)
+
+```xml
+<start>
+    <locationX>50</locationX>
+    <locationY>0</locationY>
+    <connector>
+        <targetReference>NameOfFirstNode</targetReference>
+    </connector>
+</start>
+```
+
+- `<start>` MUST have `<connector><targetReference>...</targetReference></connector>` pointing to your first node (any node element: a screen name, a recordLookup name, a decision name, etc.). Missing `<connector>` triggers the engine's `FLOW_MISSING_CONNECTOR` syntax gate.
+- `<locationX>` and `<locationY>` are required integers (canvas pixels).
+
+### 3. Every node element needs `<locationX>` + `<locationY>` integers
+
+This applies to ALL of: `<screens>`, `<decisions>`, `<recordCreates>`, `<recordUpdates>`, `<recordLookups>`, `<recordDeletes>`, `<assignments>`, `<actionCalls>`, `<subflows>`, `<waits>`, `<loops>`, `<start>`. Missing them produces `Required field is missing: locationX` at deploy.
+
+### 4. `<screens>` (plural — for Screen Flows)
+
+The root child for screens is `<screens>` (plural). A bare `<screen>` at root is INVALID.
+
+```xml
+<screens>
+    <name>ScreenApiName</name>                <!-- internal API name, no spaces -->
+    <label>Display Label</label>               <!-- shown in UI -->
+    <locationX>176</locationX>
+    <locationY>134</locationY>
+    <allowBack>true</allowBack>
+    <allowFinish>true</allowBack>
+    <allowPause>true</allowPause>
+    <showFooter>true</showFooter>
+    <showHeader>true</showHeader>
+    <connector>
+        <targetReference>NextNodeApiName</targetReference>   <!-- where Next button leads -->
+    </connector>
+    <fields>
+        <name>fieldApiName</name>
+        <fieldType>DisplayText | InputField | Choice | RadioButtons | DropdownBox | MultiSelectCheckboxes | MultiSelectPicklist | LargeTextArea | PasswordField</fieldType>
+        <!-- DisplayText: -->
+        <fieldText>&lt;p&gt;Markup with &lt;b&gt;HTML&lt;/b&gt; allowed.&lt;/p&gt;</fieldText>
+        <!-- InputField: -->
+        <dataType>String | Number | Currency | Date | DateTime | Boolean</dataType>
+        <isRequired>true</isRequired>
+        <!-- Choice / Radio / Dropdown: -->
+        <choiceReferences>choiceApiName1</choiceReferences>
+        <choiceReferences>choiceApiName2</choiceReferences>
+    </fields>
+</screens>
+```
+
+- Every `<screens>` block MUST have a `<connector>` pointing to the next node UNLESS it is a terminal screen (last one in the flow).
+- `<choiceReferences>` must resolve to a `<choices>` element declared at the Flow root with matching `<name>`.
+
+### 5. `<choices>` (declared at Flow root, referenced by `<choiceReferences>`)
+
+```xml
+<choices>
+    <name>choiceYes</name>
+    <choiceText>Yes</choiceText>
+    <dataType>String</dataType>
+    <value>
+        <stringValue>YES</stringValue>
+    </value>
+</choices>
+```
+
+### 6. `<decisions>` (branching logic)
+
+```xml
+<decisions>
+    <name>EvaluateInput</name>
+    <label>Evaluate User Input</label>
+    <locationX>312</locationX>
+    <locationY>250</locationY>
+    <defaultConnector>
+        <targetReference>NoBranchNode</targetReference>
+    </defaultConnector>
+    <defaultConnectorLabel>Otherwise</defaultConnectorLabel>
+    <rules>
+        <name>YesBranch</name>
+        <conditionLogic>and</conditionLogic>           <!-- "and" | "or" | "1 AND (2 OR 3)" -->
+        <conditions>
+            <leftValueReference>screenFieldOrVariableApiName</leftValueReference>
+            <operator>EqualTo</operator>               <!-- EqualTo|NotEqualTo|GreaterThan|LessThan|Contains|StartsWith|EndsWith|IsNull -->
+            <rightValue>
+                <stringValue>YES</stringValue>
+            </rightValue>
+        </conditions>
+        <connector>
+            <targetReference>YesBranchNode</targetReference>
+        </connector>
+        <label>Yes</label>
+    </rules>
+</decisions>
+```
+
+- Every `<rules>` block MUST have `<conditionLogic>` AND `<connector>`. The `<defaultConnector>` is the "no rule matched" fallthrough — required for every decision.
+
+### 7. `<recordCreates>` / `<recordUpdates>` / `<recordLookups>` / `<recordDeletes>`
+
+```xml
+<recordCreates>
+    <name>CreateOpportunity</name>
+    <label>Create Opportunity</label>
+    <locationX>440</locationX>
+    <locationY>380</locationY>
+    <connector>
+        <targetReference>NextNode</targetReference>
+    </connector>
+    <inputAssignments>
+        <field>Name</field>
+        <value>
+            <elementReference>screenFieldOpportunityName</elementReference>
+        </value>
+    </inputAssignments>
+    <inputAssignments>
+        <field>StageName</field>
+        <value>
+            <stringValue>Prospecting</stringValue>
+        </value>
+    </inputAssignments>
+    <object>Opportunity</object>
+</recordCreates>
+```
+
+- `<recordLookups>` adds `<filters>` (with the same shape as decision conditions) and `<outputReference>variableApiName</outputReference>` (or `<outputAssignments>` for specific fields).
+- `<recordUpdates>` adds `<filters>` to identify which records to update.
+
+### 8. `<variables>` (declared at Flow root)
+
+```xml
+<variables>
+    <name>opportunityRecord</name>
+    <dataType>SObject</dataType>            <!-- SObject | String | Number | Currency | Date | DateTime | Boolean -->
+    <objectType>Opportunity</objectType>     <!-- only when dataType=SObject -->
+    <isCollection>false</isCollection>
+    <isInput>true</isInput>                  <!-- exposed as Flow input parameter -->
+    <isOutput>false</isOutput>
+</variables>
+```
+
+### 9. `<actionCalls>` (invoke Apex, email, post-to-chatter, etc.)
+
+```xml
+<actionCalls>
+    <name>InvokeApex</name>
+    <label>Invoke Apex Service</label>
+    <locationX>576</locationX>
+    <locationY>510</locationY>
+    <actionName>MyApexClass</actionName>              <!-- @InvocableMethod class -->
+    <actionType>apex</actionType>                      <!-- apex | emailAlert | submit | quickAction | etc. -->
+    <connector>
+        <targetReference>NextNode</targetReference>
+    </connector>
+    <inputParameters>
+        <name>inputRecord</name>
+        <value>
+            <elementReference>opportunityRecord</elementReference>
+        </value>
+    </inputParameters>
+</actionCalls>
+```
+
+- When `<actionType>apex</actionType>`, the named class MUST exist in the same deploy package and MUST have a method annotated `@InvocableMethod` with parameters matching what the Flow passes.
+
+### 10. Names + cross-references
+
+- Every `<name>` is a Salesforce API name: letters, digits, underscores only. NO spaces or special characters.
+- Cross-references via `<targetReference>`, `<choiceReferences>`, `<elementReference>`, `<outputReference>` MUST match an existing element's `<name>` somewhere else in the same Flow file. A typo produces `Element <X> referenced by <Y> does not exist` at deploy.
+
+---
+
 ## Code Header & In-Code Documentation (Sr Dev review WILL reject missing headers)
 
 Every Apex class, trigger, and significant LWC component you emit MUST carry a

@@ -1,237 +1,129 @@
 /**
  * @file              LeadConversionController.cls
- * @description       AuraEnabled Apex controller for the leadConversionWizard LWC.
- *                    Exposes Lead data retrieval, duplicate-matching lookups,
- *                    quarter-end date calculation, and the conversion execution
- *                    endpoint. Delegates all business logic to LeadConversionService.
- * @author            ASDA Dev Agent (Claude Code)
+ * @description       AuraEnabled controller that serves as the entry point for the
+ *                    LWC Lead Conversion modal. Delegates all business logic to
+ *                    LeadConversionService and LeadMatchingUtil. Enforces with sharing
+ *                    to respect org-level record visibility.
+ * @author            ASDA Dev Agent
  * @created           2026-05-28
  * @lastModified      2026-05-28
  * @group             LeadConversion
  *
- * @dependencies      LeadConversionService
- * @calledBy          leadConversionWizard (LWC)
+ * @dependencies      LeadConversionService, LeadMatchingUtil, LeadConversionException
+ * @calledBy          (none in this changeset — called by LWC leadConversionModal via @salesforce/apex)
  * @testClass         LeadConversionControllerTest
  *
- * @see               LLD-001 Custom Lead Conversion (Feature: Custom Lead Conversion)
- */
-
-/**
- * Lightning controller exposing read and write operations for the Lead
- * Conversion Wizard LWC component.
- *
- * Responsibilities:
- *   - Provide cached read endpoints for Lead data and matching records.
- *   - Expose the quarter-end date for pre-populating Opportunity CloseDate.
- *   - Accept a ConversionPayload from the LWC and delegate to LeadConversionService.
- *   - Translate service exceptions into AuraHandledExceptions for client display.
- *
- * Threading: synchronous only.
- *
- * @testClass LeadConversionControllerTest
+ * @see               LLD - LWC Lead Conversion (Keneland Technology)
  */
 public with sharing class LeadConversionController {
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Read Endpoints (cacheable)
-    // ─────────────────────────────────────────────────────────────────────────
-
     /**
-     * Returns the Lead record with all fields needed by the conversion wizard.
-     * Cacheable — safe for @wire in the LWC; does not mutate data.
+     * Retrieves the Lead record with all fields required for the conversion modal,
+     * applying FLS via Security.stripInaccessible.
      *
-     * @param  leadId  Id of the Lead to retrieve.
-     * @return Lead SObject with conversion fields populated.
-     * @throws AuraHandledException on query or FLS failure.
+     * @param  leadId   Id of the Lead record to load.
+     * @return          LeadConversionService.LeadData wrapper containing the Lead and
+     *                  pre-mapped field values for Account, Contact, and Opportunity.
+     * @throws          LeadConversionException when the Lead is not found or already converted.
      *
-     * @calledBy    leadConversionWizard.js (getLeadData imperative call)
-     * @testMethods test_getLeadData_validId_returnsLead,
-     *              test_getLeadData_convertedLead_returnsLead
+     * @calledBy    leadConversionModal LWC (connectedCallback)
+     * @testMethods test_getLeadData_validId_returnsWrapper, test_getLeadData_convertedLead_throws
      */
     @AuraEnabled(cacheable=true)
-    public static Lead getLeadData(Id leadId) {
+    public static LeadConversionService.LeadData getLeadData(Id leadId) {
         try {
-            return LeadConversionService.getLeadForConversion(leadId);
+            return LeadConversionService.getLeadData(leadId);
+        } catch (LeadConversionException lce) {
+            throw new AuraHandledException(lce.getMessage());
         } catch (Exception ex) {
-            throw new AuraHandledException(ex.getMessage());
+            throw new AuraHandledException('Unexpected error loading Lead: ' + ex.getMessage());
         }
     }
 
     /**
-     * Returns existing Accounts matching the given company name.
-     * Cacheable — used to pre-populate the "Use Existing Account" list.
+     * Searches for existing Account records matching the supplied criteria.
+     * Used by the RecordSearchComponent sub-component.
      *
-     * @param  companyName  Lead.Company value to match against Account.Name.
-     * @return List<Account> — up to 10 matches; empty list if none.
-     * @throws AuraHandledException on query or FLS failure.
+     * @param  searchRequest   JSON-serialised LeadMatchingUtil.AccountSearchRequest.
+     * @return                 List of LeadMatchingUtil.MatchResult wrappers.
      *
-     * @calledBy    leadConversionWizard.js (findMatchingAccounts imperative call)
-     * @testMethods test_findMatchingAccounts_matchFound_returnsAccounts,
-     *              test_findMatchingAccounts_noMatch_returnsEmpty
+     * @calledBy    recordSearchComponent LWC
+     * @testMethods test_searchAccounts_byName_returnsMatches, test_searchAccounts_noMatch_returnsEmpty
      */
-    @AuraEnabled(cacheable=true)
-    public static List<Account> findMatchingAccounts(String companyName) {
+    @AuraEnabled(cacheable=false)
+    public static List<LeadMatchingUtil.MatchResult> searchAccounts(String searchRequest) {
         try {
-            return LeadConversionService.findMatchingAccounts(companyName);
+            LeadMatchingUtil.AccountSearchRequest req =
+                (LeadMatchingUtil.AccountSearchRequest) JSON.deserialize(
+                    searchRequest, LeadMatchingUtil.AccountSearchRequest.class);
+            return LeadMatchingUtil.findMatchingAccounts(req);
+        } catch (LeadConversionException lce) {
+            throw new AuraHandledException(lce.getMessage());
         } catch (Exception ex) {
-            throw new AuraHandledException(ex.getMessage());
+            throw new AuraHandledException('Error searching Accounts: ' + ex.getMessage());
         }
     }
 
     /**
-     * Returns existing Contacts matching the given email address.
-     * Cacheable — used to pre-populate the "Use Existing Contact" list.
+     * Searches for existing Contact records matching the supplied criteria.
      *
-     * @param  email  Lead.Email value to match against Contact.Email.
-     * @return List<Contact> — up to 10 matches; empty list if none.
-     * @throws AuraHandledException on query or FLS failure.
+     * @param  searchRequest   JSON-serialised LeadMatchingUtil.ContactSearchRequest.
+     * @return                 List of LeadMatchingUtil.MatchResult wrappers.
      *
-     * @calledBy    leadConversionWizard.js (findMatchingContacts imperative call)
-     * @testMethods test_findMatchingContacts_matchFound_returnsContacts,
-     *              test_findMatchingContacts_noMatch_returnsEmpty
+     * @calledBy    recordSearchComponent LWC
+     * @testMethods test_searchContacts_byEmail_returnsMatches, test_searchContacts_noMatch_returnsEmpty
      */
-    @AuraEnabled(cacheable=true)
-    public static List<Contact> findMatchingContacts(String email) {
+    @AuraEnabled(cacheable=false)
+    public static List<LeadMatchingUtil.MatchResult> searchContacts(String searchRequest) {
         try {
-            return LeadConversionService.findMatchingContacts(email);
+            LeadMatchingUtil.ContactSearchRequest req =
+                (LeadMatchingUtil.ContactSearchRequest) JSON.deserialize(
+                    searchRequest, LeadMatchingUtil.ContactSearchRequest.class);
+            return LeadMatchingUtil.findMatchingContacts(req);
+        } catch (LeadConversionException lce) {
+            throw new AuraHandledException(lce.getMessage());
         } catch (Exception ex) {
-            throw new AuraHandledException(ex.getMessage());
+            throw new AuraHandledException('Error searching Contacts: ' + ex.getMessage());
         }
     }
 
     /**
-     * Returns the last day of the current calendar quarter.
-     * Used to pre-populate Opportunity.CloseDate in the LWC wizard.
-     * Cacheable — pure computation, no side effects.
+     * Executes the Lead conversion using the supplied conversion request.
+     * Delegates to LeadConversionService.convertLead.
      *
-     * @return Date — last day of current quarter (e.g., 2026-06-30 for Q2).
+     * @param  conversionRequest   JSON-serialised LeadConversionService.ConversionRequest.
+     * @return                     LeadConversionService.ConversionResult with Ids of created/linked records.
+     * @throws                     AuraHandledException on any failure.
      *
-     * @calledBy    leadConversionWizard.js (getQuarterEndDate imperative call)
-     * @testMethods test_getQuarterEndDate_returnsExpectedDate
+     * @calledBy    leadConversionModal LWC (handleConvert)
+     * @testMethods test_convertLead_newRecords_succeeds, test_convertLead_existingAccount_succeeds,
+     *              test_convertLead_missingRequired_throws
      */
-    @AuraEnabled(cacheable=true)
-    public static Date getQuarterEndDate() {
-        return LeadConversionService.getQuarterEndDate();
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Write Endpoint
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /**
-     * Executes the lead conversion using the values collected by the LWC wizard.
-     * Builds a LeadConversionService.ConversionRequest from the payload, delegates
-     * to the service, and wraps the result in a ConversionResultWrapper for the LWC.
-     *
-     * @param  payload  ConversionPayload instance deserialized from the LWC's JS object.
-     * @return ConversionResultWrapper containing success flag and converted record IDs.
-     * @throws AuraHandledException on unexpected exceptions (validation errors are
-     *         surfaced via ConversionResultWrapper.success = false).
-     *
-     * @calledBy    leadConversionWizard.js (performConversion imperative call)
-     * @testMethods test_performConversion_newRecords_success,
-     *              test_performConversion_existingAccount_success,
-     *              test_performConversion_noOpportunity_success,
-     *              test_performConversion_nullLeadId_returnsFailure
-     */
-    @AuraEnabled
-    public static ConversionResultWrapper performConversion(ConversionPayload payload) {
+    @AuraEnabled(cacheable=false)
+    public static LeadConversionService.ConversionResult convertLead(String conversionRequest) {
         try {
-            LeadConversionService.ConversionRequest req = buildServiceRequest(payload);
-
-            List<LeadConversionService.ConversionResult> results =
-                LeadConversionService.convertLead(
-                    new List<LeadConversionService.ConversionRequest>{ req }
-                );
-
-            LeadConversionService.ConversionResult svcResult = results[0];
-
-            ConversionResultWrapper wrapper = new ConversionResultWrapper();
-            wrapper.success              = svcResult.success;
-            wrapper.errorMessage         = svcResult.errorMessage;
-            wrapper.convertedAccountId   = svcResult.convertedAccountId != null
-                ? String.valueOf(svcResult.convertedAccountId) : null;
-            wrapper.convertedContactId   = svcResult.convertedContactId != null
-                ? String.valueOf(svcResult.convertedContactId) : null;
-            wrapper.convertedOpportunityId = svcResult.convertedOpportunityId != null
-                ? String.valueOf(svcResult.convertedOpportunityId) : null;
-            return wrapper;
-
+            LeadConversionService.ConversionRequest req =
+                (LeadConversionService.ConversionRequest) JSON.deserialize(
+                    conversionRequest, LeadConversionService.ConversionRequest.class);
+            return LeadConversionService.convertLead(req);
+        } catch (LeadConversionException lce) {
+            throw new AuraHandledException(lce.getMessage());
         } catch (Exception ex) {
-            throw new AuraHandledException(ex.getMessage());
+            throw new AuraHandledException('Conversion failed: ' + ex.getMessage());
         }
     }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Private Helpers
-    // ─────────────────────────────────────────────────────────────────────────
-
-    /** Maps ConversionPayload fields to a LeadConversionService.ConversionRequest. */
-    private static LeadConversionService.ConversionRequest buildServiceRequest(
-        ConversionPayload payload
-    ) {
-        LeadConversionService.ConversionRequest req = new LeadConversionService.ConversionRequest();
-        req.leadId                = payload.leadId;
-        req.useExistingAccount    = payload.useExistingAccount;
-        req.existingAccountId     = payload.existingAccountId;
-        req.newAccountName        = payload.newAccountName;
-        req.leadIndustry          = payload.leadIndustry;
-        req.leadWebsite           = payload.leadWebsite;
-        req.leadPhone             = payload.leadPhone;
-        req.leadBillingStreet     = payload.leadBillingStreet;
-        req.leadBillingCity       = payload.leadBillingCity;
-        req.leadBillingState      = payload.leadBillingState;
-        req.leadBillingPostalCode = payload.leadBillingPostalCode;
-        req.useExistingContact    = payload.useExistingContact;
-        req.existingContactId     = payload.existingContactId;
-        req.leadTitle             = payload.leadTitle;
-        req.leadMobilePhone       = payload.leadMobilePhone;
-        req.createOpportunity     = payload.createOpportunity;
-        req.opportunityName       = payload.opportunityName;
-        req.opportunityAmount     = payload.opportunityAmount;
-        req.opportunityCloseDate  = payload.opportunityCloseDate;
-        return req;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    //  Inner Classes — Payload / Result Wrappers
-    // ─────────────────────────────────────────────────────────────────────────
-
     /**
-     * Deserialization target for the JavaScript object sent by leadConversionWizard.js.
-     * Property names MUST match the JS object keys exactly (case-sensitive).
+     * Returns the last day of the current fiscal quarter as a Date.
+     * Used to pre-populate the Opportunity CloseDate in the modal.
+     *
+     * @return  Date representing the last day of the current fiscal quarter.
+     *
+     * @calledBy    leadConversionModal LWC (connectedCallback)
+     * @testMethods test_getFiscalQuarterEndDate_returnsLastDayOfQuarter
      */
-    public class ConversionPayload {
-        @AuraEnabled public Id      leadId;
-        @AuraEnabled public Boolean useExistingAccount;
-        @AuraEnabled public Id      existingAccountId;
-        @AuraEnabled public String  newAccountName;
-        @AuraEnabled public String  leadIndustry;
-        @AuraEnabled public String  leadWebsite;
-        @AuraEnabled public String  leadPhone;
-        @AuraEnabled public String  leadBillingStreet;
-        @AuraEnabled public String  leadBillingCity;
-        @AuraEnabled public String  leadBillingState;
-        @AuraEnabled public String  leadBillingPostalCode;
-        @AuraEnabled public Boolean useExistingContact;
-        @AuraEnabled public Id      existingContactId;
-        @AuraEnabled public String  leadTitle;
-        @AuraEnabled public String  leadMobilePhone;
-        @AuraEnabled public Boolean createOpportunity;
-        @AuraEnabled public String  opportunityName;
-        @AuraEnabled public Decimal opportunityAmount;
-        @AuraEnabled public Date    opportunityCloseDate;
-    }
-
-    /**
-     * Serialization source returned to leadConversionWizard.js after conversion.
-     * All Id fields are exposed as String to allow easy null-checking in JS.
-     */
-    public class ConversionResultWrapper {
-        @AuraEnabled public Boolean success;
-        @AuraEnabled public String  errorMessage;
-        @AuraEnabled public String  convertedAccountId;
-        @AuraEnabled public String  convertedContactId;
-        @AuraEnabled public String  convertedOpportunityId;
+    @AuraEnabled(cacheable=true)
+    public static Date getFiscalQuarterEndDate() {
+        return LeadConversionService.getFiscalQuarterEndDate();
     }
 }

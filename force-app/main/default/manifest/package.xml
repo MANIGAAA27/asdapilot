@@ -1,13 +1,28 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
     <types>
-        <members>LeadContactHandler</members>
-        <members>LeadContactHandlerTest</members>
+        <members>LeadConversionController</members>
+        <members>LeadConversionControllerTest</members>
+        <members>LeadConversionService</members>
+        <members>LeadConversionServiceTest</members>
+        <members>LeadMatchingUtil</members>
+        <members>LeadMatchingUtilTest</members>
+        <members>LeadConversionException</members>
         <name>ApexClass</name>
     </types>
     <types>
-        <members>LeadAfterInsertTrigger</members>
-        <name>ApexTrigger</name>
+        <members>leadConversionModal</members>
+        <members>recordSearchComponent</members>
+        <members>fieldMappingComponent</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>Lead.Amount__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>LeadConversionUser</members>
+        <name>PermissionSet</name>
     </types>
     <version>62.0</version>
 </Package>

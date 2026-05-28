@@ -1,0 +1,246 @@
+<template>
+    <template if:true={isLoading}>
+        <lightning-spinner alternative-text="Loading..." size="medium"></lightning-spinner>
+    </template>
+
+    <template if:false={isLoading}>
+        <div class="slds-modal slds-fade-in-open" role="dialog" aria-modal="true"
+             aria-labelledby="modal-heading" aria-describedby="modal-content">
+            <div class="slds-modal__container">
+
+                <!-- Modal Header -->
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse"
+                            title="Close" onclick={handleClose}>
+                        <lightning-icon icon-name="utility:close" size="small"
+                                        alternative-text="Close"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading" class="slds-modal__title slds-hyphenate">
+                        Convert Lead
+                    </h2>
+                    <p class="slds-m-top_x-small slds-text-color_weak" if:true={leadName}>
+                        {leadName}
+                    </p>
+                </header>
+
+                <!-- Modal Body -->
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content">
+
+                    <!-- Error Banner -->
+                    <template if:true={errorMessage}>
+                        <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium"
+                             role="alert">
+                            <span class="slds-assistive-text">Error</span>
+                            <lightning-icon icon-name="utility:error" size="x-small"
+                                            class="slds-m-right_x-small"
+                                            alternative-text="Error"></lightning-icon>
+                            <h2>{errorMessage}</h2>
+                        </div>
+                    </template>
+
+                    <!-- Success Banner -->
+                    <template if:true={successMessage}>
+                        <div class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium"
+                             role="status">
+                            <span class="slds-assistive-text">Success</span>
+                            <lightning-icon icon-name="utility:success" size="x-small"
+                                            class="slds-m-right_x-small"
+                                            alternative-text="Success"></lightning-icon>
+                            <h2>{successMessage}</h2>
+                        </div>
+                    </template>
+
+                    <template if:false={conversionComplete}>
+
+                        <!-- ACCOUNT SECTION -->
+                        <div class="slds-section slds-is-open slds-m-bottom_medium">
+                            <h3 class="slds-section__title slds-theme_shade">
+                                <span class="slds-truncate slds-p-horizontal_small">Account</span>
+                            </h3>
+                            <div class="slds-section__content slds-p-top_small">
+
+                                <!-- Account Mode Toggle -->
+                                <div class="slds-form-element slds-m-bottom_small">
+                                    <div class="slds-form-element__control">
+                                        <lightning-radio-group
+                                            name="accountMode"
+                                            label="Account Option"
+                                            options={accountModeOptions}
+                                            value={accountMode}
+                                            type="button"
+                                            onchange={handleAccountModeChange}>
+                                        </lightning-radio-group>
+                                    </div>
+                                </div>
+
+                                <!-- Existing Account Search -->
+                                <template if:true={showAccountSearch}>
+                                    <c-record-search-component
+                                        object-type="Account"
+                                        search-label="Search Existing Accounts"
+                                        onrecordselected={handleAccountSelected}>
+                                    </c-record-search-component>
+                                    <template if:true={selectedAccountName}>
+                                        <div class="slds-box slds-theme_shade slds-m-top_small">
+                                            <lightning-icon icon-name="standard:account"
+                                                            size="small"
+                                                            class="slds-m-right_x-small"
+                                                            alternative-text="Account">
+                                            </lightning-icon>
+                                            <strong>{selectedAccountName}</strong>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <!-- New Account Fields -->
+                                <template if:true={showAccountFields}>
+                                    <c-field-mapping-component
+                                        section-title="New Account Details"
+                                        fields={accountFieldDefs}
+                                        values={accountValues}
+                                        onvaluechange={handleAccountValueChange}>
+                                    </c-field-mapping-component>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- CONTACT SECTION -->
+                        <div class="slds-section slds-is-open slds-m-bottom_medium">
+                            <h3 class="slds-section__title slds-theme_shade">
+                                <span class="slds-truncate slds-p-horizontal_small">Contact</span>
+                            </h3>
+                            <div class="slds-section__content slds-p-top_small">
+
+                                <!-- Contact Mode Toggle -->
+                                <div class="slds-form-element slds-m-bottom_small">
+                                    <div class="slds-form-element__control">
+                                        <lightning-radio-group
+                                            name="contactMode"
+                                            label="Contact Option"
+                                            options={contactModeOptions}
+                                            value={contactMode}
+                                            type="button"
+                                            onchange={handleContactModeChange}>
+                                        </lightning-radio-group>
+                                    </div>
+                                </div>
+
+                                <!-- Existing Contact Search -->
+                                <template if:true={showContactSearch}>
+                                    <c-record-search-component
+                                        object-type="Contact"
+                                        search-label="Search Existing Contacts"
+                                        onrecordselected={handleContactSelected}>
+                                    </c-record-search-component>
+                                    <template if:true={selectedContactName}>
+                                        <div class="slds-box slds-theme_shade slds-m-top_small">
+                                            <lightning-icon icon-name="standard:contact"
+                                                            size="small"
+                                                            class="slds-m-right_x-small"
+                                                            alternative-text="Contact">
+                                            </lightning-icon>
+                                            <strong>{selectedContactName}</strong>
+                                        </div>
+                                    </template>
+                                </template>
+
+                                <!-- New Contact Fields -->
+                                <template if:true={showContactFields}>
+                                    <c-field-mapping-component
+                                        section-title="New Contact Details"
+                                        fields={contactFieldDefs}
+                                        values={contactValues}
+                                        onvaluechange={handleContactValueChange}>
+                                    </c-field-mapping-component>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- OPPORTUNITY SECTION -->
+                        <div class="slds-section slds-is-open slds-m-bottom_medium">
+                            <h3 class="slds-section__title slds-theme_shade">
+                                <span class="slds-truncate slds-p-horizontal_small">Opportunity</span>
+                            </h3>
+                            <div class="slds-section__content slds-p-top_small">
+
+                                <!-- Opportunity Mode Toggle -->
+                                <div class="slds-form-element slds-m-bottom_small">
+                                    <div class="slds-form-element__control">
+                                        <lightning-radio-group
+                                            name="opportunityMode"
+                                            label="Opportunity Option"
+                                            options={opportunityModeOptions}
+                                            value={opportunityMode}
+                                            type="button"
+                                            onchange={handleOpportunityModeChange}>
+                                        </lightning-radio-group>
+                                    </div>
+                                </div>
+
+                                <!-- New Opportunity Fields -->
+                                <template if:true={showOpportunityFields}>
+                                    <c-field-mapping-component
+                                        section-title="New Opportunity Details"
+                                        fields={opportunityFieldDefs}
+                                        values={opportunityValues}
+                                        onvaluechange={handleOpportunityValueChange}>
+                                    </c-field-mapping-component>
+                                </template>
+
+                                <!-- Existing Opportunity Search -->
+                                <template if:true={showOpportunitySearch}>
+                                    <c-record-search-component
+                                        object-type="Opportunity"
+                                        search-label="Search Existing Opportunities"
+                                        onrecordselected={handleOpportunitySelected}>
+                                    </c-record-search-component>
+                                    <template if:true={selectedOpportunityName}>
+                                        <div class="slds-box slds-theme_shade slds-m-top_small">
+                                            <lightning-icon icon-name="standard:opportunity"
+                                                            size="small"
+                                                            class="slds-m-right_x-small"
+                                                            alternative-text="Opportunity">
+                                            </lightning-icon>
+                                            <strong>{selectedOpportunityName}</strong>
+                                        </div>
+                                    </template>
+                                </template>
+                            </div>
+                        </div>
+
+                    </template>
+                    <!-- /conversionComplete guard -->
+
+                </div>
+                <!-- /modal body -->
+
+                <!-- Modal Footer -->
+                <footer class="slds-modal__footer">
+                    <template if:false={conversionComplete}>
+                        <lightning-button
+                            label="Cancel"
+                            onclick={handleClose}
+                            class="slds-m-right_small">
+                        </lightning-button>
+                        <lightning-button
+                            label="Convert"
+                            variant="brand"
+                            onclick={handleConvert}
+                            disabled={isConverting}>
+                        </lightning-button>
+                    </template>
+                    <template if:true={conversionComplete}>
+                        <lightning-button
+                            label="Close"
+                            variant="brand"
+                            onclick={handleClose}>
+                        </lightning-button>
+                    </template>
+                </footer>
+
+            </div>
+        </div>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
