@@ -144,52 +144,7 @@ private class FileServiceTest {
         Test.stopTest();
 
         // Should include at minimum the account file (1) plus the contact file (1)
-        System.assert(files.size() >= 1, 'Should find at least one file; found: ' + files.size());
-    }
-
-    @isTest
-    static void getRelatedFiles_includesFilesFromChildOpportunity() {
-        Account acc = [SELECT Id FROM Account WHERE Name = 'File Viewer Test Account' LIMIT 1];
-
-        Opportunity opp = new Opportunity(
-            Name        = 'FileViewer Test Opp',
-            AccountId   = acc.Id,
-            StageName   = 'Prospecting',
-            CloseDate   = Date.today().addDays(30)
-        );
-        insert opp;
-
-        ContentVersion cv = new ContentVersion(
-            Title          = 'Opportunity Related File',
-            PathOnClient   = 'opp_file.pdf',
-            VersionData    = Blob.valueOf('Opportunity file content'),
-            IsMajorVersion = true
-        );
-        insert cv;
-
-        ContentVersion cvWithDocId = [
-            SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id LIMIT 1
-        ];
-
-        insert new ContentDocumentLink(
-            ContentDocumentId = cvWithDocId.ContentDocumentId,
-            LinkedEntityId    = opp.Id,
-            ShareType         = 'V',
-            Visibility        = 'AllUsers'
-        );
-
-        Test.startTest();
-        List<FileService.FileWrapper> files = FileService.getRelatedFiles(acc.Id);
-        Test.stopTest();
-
-        Boolean oppFileFound = false;
-        for (FileService.FileWrapper fw : files) {
-            if (fw.title == 'Opportunity Related File') {
-                oppFileFound = true;
-                break;
-            }
-        }
-        System.assert(oppFileFound, 'File attached to child Opportunity should appear when viewing parent Account');
+        System.assert(files.size() >= 2, 'Expected parent file plus child Contact file; found: ' + files.size());
     }
 
     @isTest
@@ -297,5 +252,58 @@ private class FileServiceTest {
         Test.stopTest();
 
         System.assertEquals('Contact', objectName, 'Object API name should be Contact');
+    }
+
+    @isTest
+    static void getRelatedFiles_includesFilesFromChildOpportunity() {
+        Account acc = [SELECT Id FROM Account WHERE Name = 'File Viewer Test Account' LIMIT 1];
+
+        // Child Opportunity under the Account
+        Opportunity opp = new Opportunity(
+            Name        = 'File Viewer Test Opportunity',
+            AccountId   = acc.Id,
+            StageName   = 'Prospecting',
+            CloseDate   = Date.today().addDays(30)
+        );
+        insert opp;
+
+        // File attached to the Opportunity
+        ContentVersion cv = new ContentVersion(
+            Title          = 'Opportunity Related File',
+            PathOnClient   = 'opp_file.pdf',
+            VersionData    = Blob.valueOf('Opportunity file content'),
+            IsMajorVersion = true
+        );
+        insert cv;
+
+        ContentVersion cvWithDocId = [
+            SELECT ContentDocumentId
+            FROM ContentVersion
+            WHERE Id = :cv.Id
+            LIMIT 1
+        ];
+
+        ContentDocumentLink cdl = new ContentDocumentLink(
+            ContentDocumentId = cvWithDocId.ContentDocumentId,
+            LinkedEntityId    = opp.Id,
+            ShareType         = 'V',
+            Visibility        = 'AllUsers'
+        );
+        insert cdl;
+
+        Test.startTest();
+        List<FileService.FileWrapper> files = FileService.getRelatedFiles(acc.Id);
+        Test.stopTest();
+
+        // Must include both the Account file from @TestSetup and the Opportunity file
+        System.assert(files.size() >= 2, 'Expected parent Account file plus child Opportunity file; found: ' + files.size());
+
+        Boolean oppFileFound = false;
+        for (FileService.FileWrapper fw : files) {
+            if (fw.title == 'Opportunity Related File') {
+                oppFileFound = true;
+            }
+        }
+        System.assert(oppFileFound, 'Opportunity child file should be included in getRelatedFiles result');
     }
 }

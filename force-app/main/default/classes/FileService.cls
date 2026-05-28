@@ -207,6 +207,13 @@ public with sharing class FileService {
      */
     private static Boolean isSystemObject(String objName) {
         return objName.endsWith('__History')
+            || objName.endsWith('History')
+            || objName.endsWith('__Share')
+            || objName.endsWith('Share')
+            || objName.endsWith('__Feed')
+            || objName.endsWith('Feed')
+            || objName.endsWith('__ChangeEvent')
+            || objName.endsWith('ChangeEvent')
             || objName.endsWith('__Share')
             || objName.endsWith('__Feed')
             || objName.endsWith('__ChangeEvent')
