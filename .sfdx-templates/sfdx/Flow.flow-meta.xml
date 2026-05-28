@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <!-- Canonical minimal Flow template.
+         CRITICAL: every node element (screens, decisions, recordCreates, recordUpdates,
+         recordLookups, recordDeletes, assignments, actionCalls, subflows, waits, loops,
+         and <start>) MUST have integer <locationX> and <locationY> tags (SFDX Rule 6).
+         Without them deploy fails with "Required field is missing: locationX".
+
+         The root child collection for screens is <screens> (plural).
+         <screen> (singular) at root is INVALID and produces
+         "Element ...screen invalid at this location in type FlowScreen".
+
+         Flow files do NOT have <apiVersion>. (SFDX Rule 7)
+    -->
+    <label>My Flow</label>
+    <description>Short description of what this flow does.</description>
+    <interviewLabel>My Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>WelcomeScreen</targetReference>
+        </connector>
+    </start>
+
+    <screens>
+        <name>WelcomeScreen</name>
+        <label>Welcome</label>
+        <locationX>50</locationX>
+        <locationY>120</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <fields>
+            <name>welcomeText</name>
+            <fieldText>&lt;p&gt;Welcome to the flow.&lt;/p&gt;</fieldText>
+            <fieldType>DisplayText</fieldType>
+        </fields>
+    </screens>
+</Flow>
