@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "Lead_Automation",
+      "package": "Salesforce_Flows_for_Lead_Conversion",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "Lead_Automation",
+  "name": "Salesforce_Flows_for_Lead_Conversion",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
