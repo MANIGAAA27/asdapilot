@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <processType>AutoLaunchedFlow</processType>
+    <label>Case After Update Trigger Summarization</label>
+    <status>Active</status>
+    <variables>
+        <name>recordId</name>
+        <isCollection>false</isCollection>
+        <dataType>String</dataType>
+    </variables>
+    <recordUpdates>
+        <name>Update_Last_Owner_Change_Timestamp</name>
+        <filters>
+            <field>Id</field>
+            <operator>equals</operator>
+            <value>{!recordId}</value>
+        </filters>
+        <inputAssignments>
+            <field>Last_Owner_Change_Timestamp__c</field>
+            <value>{!$Flow.CurrentDateTime}</value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+    <actionCalls>
+        <name>Enqueue_SummarizationQueueable</name>
+        <actionName>prv.SummarizationQueueable</actionName>
+        <inputParameters>
+            <name>caseId</name>
+            <value>{!recordId}</value>
+        </inputParameters>
+    </actionCalls>
+</Flow>

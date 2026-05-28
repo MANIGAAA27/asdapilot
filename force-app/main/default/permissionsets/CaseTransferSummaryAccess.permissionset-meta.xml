@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary Access</label>
+    <description>Grants read-only access to Case Transfer Summary records and related controller for display purposes.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case_Transfer_Summary__c.Case__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case_Transfer_Summary__c.Summary__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>false</editable>
+        <field>Case.Last_Owner_Change_Timestamp__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <objectPermissions>
+        <allowCreate>false</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>false</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Case_Transfer_Summary__c</object>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <classAccesses>
+        <apexClass>CaseTransferSummaryController</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>

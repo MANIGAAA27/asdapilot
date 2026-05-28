@@ -14,7 +14,7 @@
 public with sharing class FileService {
 
     /** Maximum child relationships to traverse when collecting related records. */
-    private static final Integer MAX_CHILD_RELATIONSHIPS = 25;
+    private static final Integer MAX_CHILD_RELATIONSHIPS = 50;
 
     /** Maximum child records returned per relationship query. */
     private static final Integer MAX_CHILD_RECORDS_PER_REL = 50;
@@ -214,6 +214,9 @@ public with sharing class FileService {
             || objName.endsWith('Feed')
             || objName.endsWith('__ChangeEvent')
             || objName.endsWith('ChangeEvent')
+            || objName.endsWith('__Share')
+            || objName.endsWith('__Feed')
+            || objName.endsWith('__ChangeEvent')
             || objName == 'ContentDocumentLink'
             || objName == 'ContentDocument'
             || objName == 'ContentVersion'
