@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Custom Lead Conversion Screen Flow. Launched via the "Convert Lead" Quick Action on the Lead record page. Embeds the leadConversionWizard LWC which orchestrates the multi-step conversion UI and invokes LeadConversionController to execute Database.convertLead().</description>
+    <interviewLabel>Convert Lead {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>Convert Lead Flow</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>Flow</processType>
+    <start>
+        <locationX>176</locationX>
+        <locationY>48</locationY>
+        <connector>
+            <targetReference>Lead_Conversion_Wizard</targetReference>
+        </connector>
+    </start>
+    <status>Active</status>
+    <variables>
+        <description>The Salesforce record ID of the Lead being converted. Passed automatically by the Quick Action.</description>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <screens>
+        <description>Embeds the leadConversionWizard LWC which handles all user interactions, duplicate matching, and conversion execution. The footer is hidden because the LWC provides its own navigation buttons (Back, Next, Convert, Cancel).</description>
+        <name>Lead_Conversion_Wizard</name>
+        <label>Convert Lead</label>
+        <locationX>176</locationX>
+        <locationY>158</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <fields>
+            <name>conversionWizardCmp</name>
+            <extensionName>c:leadConversionWizard</extensionName>
+            <fieldType>ComponentInstance</fieldType>
+            <inputParameters>
+                <name>recordId</name>
+                <value>
+                    <elementReference>recordId</elementReference>
+                </value>
+            </inputParameters>
+            <storeOutputAutomatically>false</storeOutputAutomatically>
+        </fields>
+        <showFooter>false</showFooter>
+        <showHeader>false</showHeader>
+    </screens>
+</Flow>

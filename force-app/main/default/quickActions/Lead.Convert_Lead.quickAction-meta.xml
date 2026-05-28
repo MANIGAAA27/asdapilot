@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<QuickAction xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionSubtype>ScreenAction</actionSubtype>
+    <description>Launches the Custom Lead Conversion wizard flow to convert a Lead into Account, Contact, and Opportunity records. Only meaningful when Lead.IsConverted = false; place on a filtered layout section or use a visibility rule in Lightning App Builder.</description>
+    <flowDefinition>Convert_Lead_Flow</flowDefinition>
+    <label>Convert Lead</label>
+    <optionsCreateFeedItem>false</optionsCreateFeedItem>
+    <type>Flow</type>
+</QuickAction>

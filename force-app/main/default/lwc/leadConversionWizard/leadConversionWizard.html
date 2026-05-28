@@ -1,0 +1,399 @@
+<template>
+    <div class="lead-conversion-wizard slds-p-around_none">
+
+        <!-- Loading state -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_x-large">
+                <lightning-spinner
+                    alternative-text="Loading lead data..."
+                    size="medium">
+                </lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error: lead already converted -->
+        <template lwc:elseif={isAlreadyConverted}>
+            <div class="slds-modal__header slds-theme_default">
+                <h1 class="slds-modal__title">Convert Lead</h1>
+            </div>
+            <div class="slds-modal__content slds-p-around_medium">
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" alternative-text="error"
+                        size="x-small" class="slds-m-right_x-small">
+                    </lightning-icon>
+                    This Lead has already been converted and cannot be converted again.
+                </div>
+            </div>
+            <div class="slds-modal__footer">
+                <lightning-button label="Close" onclick={handleCancel}></lightning-button>
+            </div>
+        </template>
+
+        <!-- Main wizard -->
+        <template lwc:else>
+            <!-- Header -->
+            <div class="slds-modal__header slds-theme_default">
+                <h1 class="slds-modal__title slds-hyphenate">Convert Lead</h1>
+            </div>
+
+            <!-- Global error banner -->
+            <template lwc:if={errorMessage}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-horizontal_medium slds-m-top_small"
+                     role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <lightning-icon icon-name="utility:error" alternative-text="error"
+                        size="x-small" class="slds-m-right_x-small">
+                    </lightning-icon>
+                    {errorMessage}
+                </div>
+            </template>
+
+            <!-- Progress indicator -->
+            <div class="slds-modal__content slds-p-horizontal_medium slds-p-top_medium">
+                <lightning-progress-indicator
+                    current-step={currentStep}
+                    type="base"
+                    class="slds-m-bottom_medium">
+                    <lightning-progress-step label="Account"     value="account">
+                    </lightning-progress-step>
+                    <lightning-progress-step label="Contact"     value="contact">
+                    </lightning-progress-step>
+                    <lightning-progress-step label="Opportunity" value="opportunity">
+                    </lightning-progress-step>
+                </lightning-progress-indicator>
+
+                <!-- ═══════════════════════════════════════════════
+                     STEP 1: Account
+                ════════════════════════════════════════════════ -->
+                <template lwc:if={isAccountStep}>
+                    <h2 class="slds-text-heading_small slds-m-bottom_small">Account</h2>
+
+                    <!-- Match found banner -->
+                    <template lwc:if={hasMatchingAccounts}>
+                        <div class="slds-notify slds-notify_toast slds-theme_info slds-m-bottom_small"
+                             role="status">
+                            <lightning-icon icon-name="utility:info" alternative-text="info"
+                                size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            Existing accounts were found that may match this lead.
+                            Review the options below.
+                        </div>
+                    </template>
+
+                    <!-- Account choice radio group -->
+                    <lightning-radio-group
+                        name="accountChoice"
+                        label="Account"
+                        options={accountOptions}
+                        value={accountChoice}
+                        onchange={handleAccountChoiceChange}
+                        class="slds-m-bottom_medium">
+                    </lightning-radio-group>
+
+                    <!-- Existing accounts list -->
+                    <template lwc:if={showExistingAccountList}>
+                        <div class="slds-box slds-box_x-small slds-m-bottom_medium">
+                            <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                Select an existing account:
+                            </p>
+                            <lightning-radio-group
+                                name="existingAccount"
+                                label="Existing Accounts"
+                                variant="label-hidden"
+                                options={matchingAccountOptions}
+                                value={selectedAccountId}
+                                onchange={handleExistingAccountSelect}>
+                            </lightning-radio-group>
+                        </div>
+                    </template>
+
+                    <!-- New account form -->
+                    <template lwc:if={showNewAccountForm}>
+                        <fieldset class="slds-box slds-box_x-small slds-m-bottom_medium">
+                            <legend class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                New Account Details
+                            </legend>
+                            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Account Name"
+                                        value={newAccountName}
+                                        required
+                                        onchange={handleNewAccountNameChange}
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Industry"
+                                        value={newAccountIndustry}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountIndustry"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Phone"
+                                        type="tel"
+                                        value={newAccountPhone}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountPhone"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Website"
+                                        type="url"
+                                        value={newAccountWebsite}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountWebsite"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1">
+                                    <lightning-input
+                                        label="Billing Street"
+                                        value={newAccountBillingStreet}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountBillingStreet"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                    <lightning-input
+                                        label="Billing City"
+                                        value={newAccountBillingCity}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountBillingCity"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                    <lightning-input
+                                        label="Billing State"
+                                        value={newAccountBillingState}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountBillingState"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-3">
+                                    <lightning-input
+                                        label="Billing Postal Code"
+                                        value={newAccountBillingPostalCode}
+                                        onchange={handleFieldChange}
+                                        data-field="newAccountBillingPostalCode"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </template>
+                </template>
+
+                <!-- ═══════════════════════════════════════════════
+                     STEP 2: Contact
+                ════════════════════════════════════════════════ -->
+                <template lwc:if={isContactStep}>
+                    <h2 class="slds-text-heading_small slds-m-bottom_small">Contact</h2>
+
+                    <template lwc:if={hasMatchingContacts}>
+                        <div class="slds-notify slds-notify_toast slds-theme_info slds-m-bottom_small"
+                             role="status">
+                            <lightning-icon icon-name="utility:info" alternative-text="info"
+                                size="x-small" class="slds-m-right_x-small">
+                            </lightning-icon>
+                            Existing contacts were found that may match this lead.
+                        </div>
+                    </template>
+
+                    <lightning-radio-group
+                        name="contactChoice"
+                        label="Contact"
+                        options={contactOptions}
+                        value={contactChoice}
+                        onchange={handleContactChoiceChange}
+                        class="slds-m-bottom_medium">
+                    </lightning-radio-group>
+
+                    <!-- Existing contacts list -->
+                    <template lwc:if={showExistingContactList}>
+                        <div class="slds-box slds-box_x-small slds-m-bottom_medium">
+                            <p class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                Select an existing contact:
+                            </p>
+                            <lightning-radio-group
+                                name="existingContact"
+                                label="Existing Contacts"
+                                variant="label-hidden"
+                                options={matchingContactOptions}
+                                value={selectedContactId}
+                                onchange={handleExistingContactSelect}>
+                            </lightning-radio-group>
+                        </div>
+                    </template>
+
+                    <!-- New contact form -->
+                    <template lwc:if={showNewContactForm}>
+                        <fieldset class="slds-box slds-box_x-small slds-m-bottom_medium">
+                            <legend class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                New Contact Details
+                            </legend>
+                            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="First Name"
+                                        value={newContactFirstName}
+                                        onchange={handleFieldChange}
+                                        data-field="newContactFirstName"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Last Name"
+                                        value={newContactLastName}
+                                        required
+                                        onchange={handleFieldChange}
+                                        data-field="newContactLastName"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Title"
+                                        value={newContactTitle}
+                                        onchange={handleFieldChange}
+                                        data-field="newContactTitle"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Email"
+                                        type="email"
+                                        value={newContactEmail}
+                                        onchange={handleFieldChange}
+                                        data-field="newContactEmail"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Mobile Phone"
+                                        type="tel"
+                                        value={newContactMobilePhone}
+                                        onchange={handleFieldChange}
+                                        data-field="newContactMobilePhone"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </template>
+                </template>
+
+                <!-- ═══════════════════════════════════════════════
+                     STEP 3: Opportunity
+                ════════════════════════════════════════════════ -->
+                <template lwc:if={isOpportunityStep}>
+                    <h2 class="slds-text-heading_small slds-m-bottom_small">Opportunity</h2>
+
+                    <lightning-input
+                        type="checkbox"
+                        label="Create Opportunity"
+                        checked={createOpportunity}
+                        onchange={handleCreateOpportunityChange}
+                        class="slds-m-bottom_medium">
+                    </lightning-input>
+
+                    <template lwc:if={createOpportunity}>
+                        <fieldset class="slds-box slds-box_x-small slds-m-bottom_medium">
+                            <legend class="slds-text-body_small slds-text-color_weak slds-m-bottom_x-small">
+                                Opportunity Details
+                            </legend>
+                            <div class="slds-grid slds-wrap slds-gutters_x-small">
+                                <div class="slds-col slds-size_1-of-1">
+                                    <lightning-input
+                                        label="Opportunity Name"
+                                        value={opportunityName}
+                                        required
+                                        onchange={handleFieldChange}
+                                        data-field="opportunityName"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Amount"
+                                        type="number"
+                                        formatter="currency"
+                                        value={opportunityAmount}
+                                        onchange={handleFieldChange}
+                                        data-field="opportunityAmount"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                    <lightning-input
+                                        label="Close Date"
+                                        type="date"
+                                        value={opportunityCloseDate}
+                                        required
+                                        onchange={handleFieldChange}
+                                        data-field="opportunityCloseDate"
+                                        class="slds-m-bottom_x-small">
+                                    </lightning-input>
+                                </div>
+                            </div>
+                        </fieldset>
+                    </template>
+                </template>
+            </div>
+
+            <!-- Footer navigation -->
+            <div class="slds-modal__footer">
+                <lightning-button
+                    label="Cancel"
+                    onclick={handleCancel}
+                    class="slds-m-right_x-small">
+                </lightning-button>
+                <template lwc:if={showBackButton}>
+                    <lightning-button
+                        label="Back"
+                        onclick={handleBack}
+                        class="slds-m-right_x-small">
+                    </lightning-button>
+                </template>
+                <template lwc:if={isLastStep}>
+                    <lightning-button
+                        variant="brand"
+                        label="Convert"
+                        onclick={handleConvert}
+                        disabled={isConverting}>
+                    </lightning-button>
+                </template>
+                <template lwc:else>
+                    <lightning-button
+                        variant="brand"
+                        label="Next"
+                        onclick={handleNext}>
+                    </lightning-button>
+                </template>
+            </div>
+
+            <!-- Converting overlay -->
+            <template lwc:if={isConverting}>
+                <div class="slds-backdrop slds-backdrop_open">
+                    <lightning-spinner
+                        alternative-text="Converting lead..."
+                        size="medium">
+                    </lightning-spinner>
+                </div>
+            </template>
+        </template>
+    </div>
+</template>

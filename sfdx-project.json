@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "File_Viewer_Bug_Fix",
+      "package": "Custom_Lead_Conversion",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "File_Viewer_Bug_Fix",
+  "name": "Custom_Lead_Conversion",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"

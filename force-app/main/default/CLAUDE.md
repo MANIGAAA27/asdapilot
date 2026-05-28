@@ -10,7 +10,9 @@ You write Salesforce code for a living. Every file you produce must compile, dep
 
 ## Start From Templates, Not From Scratch
 
-A `templates/` directory at the project root contains verified-good canonical examples for every metadata type you commonly emit. **Read the relevant template before writing any new metadata file** and modify ONLY the marked fields. LLMs paraphrase from prose unreliably but copy from templates accurately — this is the single biggest leverage for iteration-1 quality.
+The `.sfdx-templates/sfdx/` directory at the project root contains verified-good canonical examples for every metadata type you commonly emit. **Read the relevant template before writing any new metadata file** and modify ONLY the marked fields. LLMs paraphrase from prose unreliably but copy from templates accurately — this is the single biggest leverage for iteration-1 quality.
+
+If `.sfdx-templates/` is missing from this workspace, write your files anyway using the per-type rules below — DO NOT abort with "no templates available". The seed copy is best-effort; the prose rules are the contract.
 
 | When emitting | Read template |
 |---|---|
@@ -28,14 +30,14 @@ The templates encode every rule below — diverging from them is how you produce
 
 ---
 
-## Per-File Pre-Emission Checklist (run mentally before each `=== FILE: ===` block)
+## Per-File Pre-Emission Checklist (run INSIDE the same turn as the Write call)
 
-You read the rules below once at the top of this prompt. By the time you're emitting file 8 those rules are out of attention. So before EVERY file, run a short type-specific checklist:
+You read the rules below once at the top of this prompt. By the time you're emitting file 8 those rules are out of attention. So before EVERY file, run a short type-specific checklist — **inside the same turn that emits the Write tool_use, not as a separate planning turn**. A turn whose content is only a thinking block (no Write/Edit) is incomplete; always pair planning with action.
 
 ```
 Before emitting <path>:
-  [ ] Did I start from the canonical template in .sfdx-templates/sfdx/ ?
-  [ ] Does this file's metadata type REQUIRE or REJECT <apiVersion>? (cheatsheet in templates/README.md)
+  [ ] Did I start from the canonical template in .sfdx-templates/sfdx/ (if seeded)?
+  [ ] Does this file's metadata type REQUIRE or REJECT <apiVersion>? (cheatsheet in .sfdx-templates/README.md)
   [ ] If __c CustomObject: <label>, <pluralLabel>, <nameField>, <deploymentStatus>, <sharingModel> all present?
   [ ] If __mdt CustomObject: NONE of those four present (Rule 6)?
   [ ] If PermissionSet/Object/Field/Layout/Flow: NO <apiVersion> tag?
@@ -82,6 +84,341 @@ If you can't answer YES to every applicable item, fix it BEFORE moving to the ne
     - Is annotated `@isTest`, declared as `private class`, has NO `extends` / `implements` (Rule 6).
     - Uses `Test.startTest()` / `Test.stopTest()` and asserts specific outcomes.
     - Catches into `Exception ex`, NEVER `Exception exception` (Rule 10).
+    - Follows the **Test Data Strategy** section below — do not duplicate data setup inline.
+
+---
+
+## Code Header & In-Code Documentation (Sr Dev review WILL reject missing headers)
+
+Every Apex class, trigger, and significant LWC component you emit MUST carry a
+file-level header, a class-level docblock, and a method-level docblock on every
+public/global method. The purpose is auditability — when something breaks at
+2 AM and a human needs to read the code cold, the header tells them what the
+class does, who called it, and which tests cover it.
+
+### 1. File-level header (top of every `.cls` and `.trigger` file)
+
+Format the docblock as ApexDoc — Salesforce's IDE + Apex Documentation Generator
+both parse this format.
+
+```apex
+/**
+ * @file              AccountDedupeService.cls
+ * @description       Centralises account-merge + dedupe logic. Detects
+ *                    duplicates by email + phone hash, walks parent/child
+ *                    hierarchies, and merges sets while preserving Contact
+ *                    and Opportunity child relationships.
+ * @author            ASDA Dev Agent (<agent-name>)
+ * @created           2026-05-23
+ * @lastModified      2026-05-23
+ * @group             AccountManagement
+ *
+ * @dependencies      AccountSelector, AccountValidator, ErrorLogger
+ * @calledBy          (filled by post-process — leave as "(none-yet)" when
+ *                    emitting the FIRST file in a changeset since no caller
+ *                    has been written yet; a later post-process pass
+ *                    populates this from a workspace symbol scan. NEVER
+ *                    invent caller names — an empty/honest tag is better
+ *                    than a fabricated one.)
+ * @testClass         AccountDedupeServiceTest
+ *
+ * @see               LLD-005 Account Dedupe (Feature: <featureTitle>)
+ */
+```
+
+Fill placeholders from your actual context:
+- `<agent-name>` — the agent that wrote the file (Claude Code / Codex / Aider).
+  If you're running in the ASDA dev-orchestration loop, use the agent name
+  visible at the top of your prompt's `AGENT IDENTITY` block. Do NOT invent
+  a name; if unknown, write `ASDA Dev Agent`.
+- `@calledBy` — list every other class/method in this same emitted package
+  that calls into this file. If none yet, write `(none in this changeset)`.
+  Update this list whenever you add a new caller in the same changeset.
+- `@testClass` — the paired `*Test.cls` you also emit (Rule 11 in Apex Rules
+  above mandates the pairing). Single line, single class name.
+
+### 2. Class-level docblock (immediately above `public class …`)
+
+Short — purpose + responsibilities + threading caveats:
+
+```apex
+/**
+ * Service layer for Account merging and dedupe.
+ *
+ * Responsibilities:
+ *   - Detect duplicate Accounts by email + phone hash.
+ *   - Merge duplicate sets while preserving Contact / Opportunity rels.
+ *   - Walk parent/child Account hierarchies and flatten for reporting.
+ *
+ * Threading: not bulkified across @future contexts — call only from
+ * a synchronous trigger or batch onExecute.
+ *
+ * @testClass AccountDedupeServiceTest
+ */
+public with sharing class AccountDedupeService {
+```
+
+### 3. Method-level docblock (every public, global, and webservice method)
+
+```apex
+/**
+ * Detects duplicate Accounts within the provided list using the email +
+ * phone hashing rule. Bulk-safe up to 200 records per invocation.
+ *
+ * @param  accounts   List of Account records to dedupe. Must include
+ *                    Email__c and Phone fields populated.
+ * @param  threshold  Similarity threshold (0.0–1.0); default 0.85 when null.
+ * @return Map of Account.Id → matching duplicate Set<Id>. Empty map when no
+ *         dupes found. Never returns null.
+ * @throws AccountDedupeServiceException when threshold is out of range.
+ *
+ * @calledBy    (filled by post-process — write "(none-yet)" if no callers
+ *               exist in this changeset rather than inventing names)
+ * @testMethods (filled by post-process — list the @isTest methods you ARE
+ *               emitting in the paired *Test.cls for this class. If you
+ *               haven't decided yet, write "(see *Test.cls)" — NEVER write
+ *               method names that don't exist. The Sr Dev review treats
+ *               fabricated test names as a worse signal than
+ *               "(needs coverage)".)
+ *
+ * Algorithm: O(n²) hash comparison; switch to LSH if n > 10k (out of scope).
+ */
+public static Map<Id, Set<Id>> detectDuplicates(List<Account> accounts, Decimal threshold) {
+```
+
+`@testMethods` lists the specific test methods that exercise this code path
+(NOT the class — the methods). If a method has zero direct test coverage,
+write `(needs coverage)` and the Sr Dev review will treat that as a blocker.
+
+### 4. Private helper methods
+
+Single-line docblock is enough — no need for full @param / @return blocks
+unless the helper is non-obvious:
+
+```apex
+/** Normalises a phone number to digits-only for hashing. */
+private static String normalisePhone(String raw) {
+```
+
+### 5. Trigger files
+
+Trigger body is one line; put all docs at file level:
+
+```apex
+/**
+ * @file        AccountTrigger.trigger
+ * @description Routes Account DML events to AccountTriggerHandler.
+ *              All logic lives in the handler (Sr Dev rule §6: no trigger
+ *              body logic). Bulkified — handler operates on Trigger.new /
+ *              Trigger.old lists.
+ * @author      ASDA Dev Agent (<agent-name>)
+ * @testClass   AccountTriggerHandlerTest
+ */
+trigger AccountTrigger on Account (
+    before insert, before update, before delete,
+    after insert, after update, after delete, after undelete
+) {
+    new AccountTriggerHandler().run();
+}
+```
+
+### 6. Test classes carry headers too
+
+```apex
+/**
+ * @file        AccountDedupeServiceTest.cls
+ * @description Tests AccountDedupeService — covers email/phone matching,
+ *              threshold validation, bulk 200+ paths, and hierarchy walks.
+ * @testFor     AccountDedupeService
+ * @coverage    Target ≥ 90%. Last measured 92% (2026-05-23).
+ */
+@isTest
+private class AccountDedupeServiceTest {
+```
+
+`@testFor` is the inverse of `@testClass` — it makes the link from test
+back to production class unambiguous in code review.
+
+---
+
+## Naming Conventions (best practices Sr Dev review will check for)
+
+### Classes
+
+| Type | Suffix | Example |
+|---|---|---|
+| Service layer | `Service` | `AccountDedupeService` |
+| Selector / DAO | `Selector` | `AccountSelector` |
+| Trigger | `Trigger` | `AccountTrigger` |
+| Trigger handler | `TriggerHandler` | `AccountTriggerHandler` |
+| Aura / LWC server controller | `Controller` | `AccountMergeController` |
+| REST resource | `RestResource` or `Resource` | `AccountMergeResource` |
+| Custom exception | `Exception` | `AccountDedupeServiceException` |
+| Test class | `Test` | `AccountDedupeServiceTest` |
+| HTTP callout mock | `CalloutMock` | `StripeCalloutMock` |
+| Batch class | `Batch` | `AccountDedupeBatch` |
+| Queueable | `Queueable` | `AccountReindexQueueable` |
+| Schedulable | `Schedulable` | `NightlyDedupeSchedulable` |
+| Utility | `Util` (not `Utils` / `Helper`) | `StringUtil` |
+
+- **PascalCase**, no underscores.
+- Class name MUST match file name exactly (Salesforce enforces this at deploy).
+
+### Methods
+
+- **camelCase**, verb-first: `getX`, `createX`, `updateX`, `deleteX`,
+  `validateX`, `handleX`, `onBeforeInsert`, `onAfterUpdate`.
+- Boolean returns: `isX`, `hasX`, `canX`, `shouldX`.
+- Test methods: `test_<scenario>_<expectedOutcome>`, e.g.
+  `test_createAccount_validInput_succeeds`,
+  `test_createAccount_nullName_throws`. Avoid generic
+  `testPositive()` / `testNegative()` — they don't tell you what's actually
+  being verified.
+
+### Variables / parameters
+
+- **camelCase descriptive** — `accountToMerge` not `a`.
+- Loop indices: `i`, `j` are OK in tight inline loops; otherwise use
+  `accountIndex`, `recordIndex`.
+- Never reuse reserved keywords (Rule 10 in Apex Rules above —
+  `exception`, `system`, etc.).
+
+### Constants
+
+- **SCREAMING_SNAKE_CASE**, `static final`:
+  `private static final Integer MAX_BATCH_SIZE = 200;`
+- Group related constants in a single `Constants` or feature-scoped class
+  rather than spreading across files.
+
+### SObject custom names
+
+- **Object API name**: PascalCase + `__c`, e.g. `Customer_Onboarding__c`.
+- **Field API name**: PascalCase + `__c`, e.g. `Match_Score__c`,
+  `Is_Active__c`. Use `__r` for relationship traversal in SOQL.
+- **No abbreviations** unless industry-standard (`URL`, `ID`, `SLA`).
+
+### File paths (SFDX)
+
+- `force-app/main/default/classes/<ClassName>.cls` + matching `.cls-meta.xml`.
+- LWC: `force-app/main/default/lwc/<componentName>/` with camelCase folder.
+- Object: `force-app/main/default/objects/<Object_API_Name>/` (keeps the
+  `__c` suffix at directory level).
+- Permission sets: `force-app/main/default/permissionsets/<Name>.permissionset-meta.xml`.
+
+### Branch + commit (when emitting Git changes)
+
+- Branch: `feature/lld-<NN>-<slug>` for per-LLD workflows, otherwise
+  `feature/<short-description>`.
+- Commit: `<type>(<scope>): <subject>` where type is
+  `feat` / `fix` / `refactor` / `test` / `docs` and scope is the
+  feature or component name (e.g. `feat(account-dedupe): add LSH fallback`).
+
+---
+
+## Test Data Strategy (the conventions Sr Dev review will check for)
+
+1. **Use the project's TestDataFactory if one exists.** Before writing any
+   inline `insert new Account(...)` in your @testSetup or test methods, scan
+   the workspace for a `TestDataFactory.cls` / `TestFactory.cls` (e.g.
+   `find force-app/main/default/classes -iname "TestDataFactory.cls" -o -iname "TestFactory.cls"`).
+   If one exists, you MUST call its factory methods (e.g.
+   `TestDataFactory.createAccount('Acme')` or
+   `TestDataFactory.createOpportunityWithLineItems(...)`) rather than
+   re-implementing the setup. Duplicate inline data setup is a Sr Dev
+   review-rejection trigger — it breaks the single-source-of-truth
+   invariant every other test class in the project relies on, and any
+   later schema change (e.g. a new required field) has to be applied
+   in N places instead of one.
+
+2. **The "Established Framework Patterns" block in your prompt will list
+   TestDataFactory when it's detected.** Treat that signal as authoritative —
+   if the block says `TestDataFactory — detected from repo files`, the
+   factory exists; `grep` for its method signatures before writing your test.
+
+3. **No TestDataFactory exists yet?** If the project has no factory AND you
+   are emitting more than one test class in this changeset, EMIT a starter
+   `TestDataFactory.cls` as the first file. Use the builder pattern — each
+   method returns the inserted SObject (or a builder that does) so callers
+   can chain. Example shape:
+
+   ```apex
+   @isTest
+   public class TestDataFactory {
+       public static Account createAccount(String name) {
+           Account a = new Account(Name = name, Industry = 'Technology');
+           insert a;
+           return a;
+       }
+       public static List<Account> createAccounts(Integer count) {
+           List<Account> accts = new List<Account>();
+           for (Integer i = 0; i < count; i++) {
+               accts.add(new Account(Name = 'Test ' + i));
+           }
+           insert accts;
+           return accts;
+       }
+   }
+   ```
+
+   Cover only the SObjects your tests actually need; don't speculatively
+   add factory methods for objects nobody tests in this changeset.
+
+4. **Prefer Salesforce's StubProvider for behavior verification without DML.**
+   When testing the orchestration / business logic of a class that calls
+   into a dependency (a Selector, a Service, an HTTP gateway), use
+   `Test.createStub(YourDependency.class, new YourDependencyStub())` to
+   inject a stub instead of inserting real records. Tests run in
+   milliseconds instead of seconds and stay focused on the behaviour
+   under test. Reserve real DML for code that directly hits the database
+   (Triggers, Selectors).
+
+   **CANNOT be stubbed (will fail compile if you try)**: `final` classes;
+   `private` classes; static methods (stub the instance method that wraps
+   them instead); triggers (test triggers via DML on real records); inner
+   classes; system types (`Database`, `Schema`, `UserInfo`, etc.); classes
+   with a `@TestVisible private` constructor (Apex disallows StubProvider
+   on these); classes containing methods that return SObject types that
+   are not API-accessible. If the class you want to stub falls into one of
+   these categories, refactor the caller to use dependency injection of an
+   interface (`@TestVisible` interface field) and stub THE INTERFACE
+   instead.
+
+   Stub example:
+
+   ```apex
+   private class AccountSelectorStub implements System.StubProvider {
+       public Object handleMethodCall(Object stubbed, String methodName,
+           Type returnType, List<Type> paramTypes, List<String> paramNames,
+           List<Object> args) {
+           if (methodName == 'getById') {
+               return new Account(Id = '001000000000001', Name = 'Stubbed Acme');
+           }
+           return null;
+       }
+   }
+   // In the test method:
+   AccountSelector mockSelector = (AccountSelector) Test.createStub(
+       AccountSelector.class, new AccountSelectorStub()
+   );
+   MyService svc = new MyService();
+   svc.selector = mockSelector;  // dependency injection via @TestVisible
+   ```
+
+5. **HTTP callouts use the HttpCalloutMock pattern with a clearly-named
+   mock class.** For every class that does an `Http.send()`, emit a sibling
+   `<X>CalloutMock.cls` implementing `HttpCalloutMock`. Wire it via
+   `Test.setMock(HttpCalloutMock.class, new <X>CalloutMock())` inside the
+   test method. Cover at least one success-path mock and one error-path
+   mock (e.g. a 500 response, malformed JSON).
+
+6. **@TestVisible** is the supported way to reach private members from a
+   test. Use it sparingly — only for members the test actually needs to
+   seed (injected dependencies, computed caches). Don't blanket-annotate.
+
+7. **Bulk testing.** For Triggers and any class processing `List<SObject>`,
+   include at least one test method that exercises the path with 200+
+   records. The TestDataFactory should expose a `create<N>Accounts(Integer n)`
+   flavour for this; add the helper to the factory when you need it.
 
 ---
 
