@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Projected_Close_Date__c</fullName>
+    <label>Projected Close Date</label>
+    <type>Date</type>
+    <required>false</required>
+    <description>The projected close date for the deal. Maps to Opportunity CloseDate.</description>
+</CustomField>
