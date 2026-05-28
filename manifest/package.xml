@@ -1,20 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
   <types>
-    <members>LeadConversionController</members>
-    <members>LeadConversionControllerTest</members>
-    <members>LeadConversionService</members>
-    <members>LeadConversionServiceTest</members>
-    <members>TestDataFactory</members>
+    <members>LeadContactHandler</members>
+    <members>LeadContactHandlerTest</members>
     <name>ApexClass</name>
   </types>
   <types>
-    <members>leadConversionWizard</members>
-    <name>LightningComponentBundle</name>
-  </types>
-  <types>
-    <members>Lead</members>
-    <name>CustomObject</name>
+    <members>LeadAfterInsertTrigger</members>
+    <name>ApexTrigger</name>
   </types>
   <version>59.0</version>
 </Package>
