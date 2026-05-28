@@ -1,115 +1,164 @@
 /**
  * @file              TestDataFactory.cls
- * @description       Centralised test-data factory for Case Summary Transfer 1.0.
- *                    All @isTest classes in this package must call these methods
- *                    instead of duplicating inline insert statements. Keeps
- *                    schema changes to a single place.
+ * @description       Centralised test data factory for the Custom Lead Conversion
+ *                    feature. Provides builder methods for Lead, Account, and Contact
+ *                    records used across all test classes in this changeset.
+ *                    All methods insert the record and return it so callers can chain.
  * @author            ASDA Dev Agent (Claude Code)
- * @created           2026-05-25
- * @lastModified      2026-05-25
- * @group             CaseSummaryTransfer
+ * @created           2026-05-28
+ * @lastModified      2026-05-28
+ * @group             TestUtilities
  *
- * @dependencies      (none in this changeset)
- * @calledBy          CaseDataAggregationServiceTest, CaseTransferPayloadBuilderTest,
- *                    LLMCalloutServiceTest, CaseSummaryPersistenceServiceTest,
- *                    CaseSummaryTransferServiceTest, CaseSummaryTransferQueueableTest,
- *                    CaseTriggerHandlerTest, CaseSummaryControllerTest
- * @testClass         (this IS the test factory — no separate test class required)
+ * @dependencies      (none)
+ * @calledBy          LeadConversionServiceTest, LeadConversionControllerTest
+ * @testClass         (utility — not directly tested; covered by consumers)
  *
- * @see               LLD-Case Summary Transfer 1.0
+ * @see               LLD-001 Custom Lead Conversion (Feature: Custom Lead Conversion)
+ */
+
+/**
+ * Centralised factory for test SObject records used by the Lead Conversion
+ * feature tests.
+ *
+ * Responsibilities:
+ *   - Create and insert Lead records with all conversion-relevant fields.
+ *   - Create and insert Account records for "existing account" test paths.
+ *   - Create and insert Contact records for "existing contact" test paths.
+ *   - Provide bulk variants (createLeads, createAccounts) for governor-limit tests.
+ *
+ * @testClass (utility — exercised via LeadConversionServiceTest /
+ *             LeadConversionControllerTest)
  */
 @isTest
 public class TestDataFactory {
 
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Lead Builders
+    // ─────────────────────────────────────────────────────────────────────────
+
     /**
-     * Creates and inserts a single Account with the given name.
+     * Creates and inserts a Lead with all fields relevant to the conversion wizard.
      *
-     * @param  name  Display name for the Account.
-     * @return Inserted Account with Id populated.
+     * @param  firstName   Lead.FirstName
+     * @param  lastName    Lead.LastName
+     * @param  company     Lead.Company (also used as default Opportunity name)
+     * @return Inserted Lead record.
      */
-    public static Account createAccount(String name) {
-        Account acc = new Account(Name = name);
-        insert acc;
-        return acc;
+    public static Lead createLead(String firstName, String lastName, String company) {
+        Lead lead = new Lead(
+            FirstName           = firstName,
+            LastName            = lastName,
+            Company             = company,
+            Email               = firstName.toLowerCase() + '.' + lastName.toLowerCase()
+                                    + '@' + company.replaceAll('\\s+', '').toLowerCase() + '.example.com',
+            Phone               = '415-555-0100',
+            MobilePhone         = '415-555-0101',
+            Industry            = 'Technology',
+            Website             = 'https://www.' + company.replaceAll('\\s+', '').toLowerCase() + '.example.com',
+            Title               = 'CEO',
+            Street              = '123 Main St',
+            City                = 'San Francisco',
+            State               = 'CA',
+            PostalCode          = '94105',
+            Country             = 'USA',
+            Status              = 'Open - Not Contacted',
+            Conversion_Amount__c = 50000.00
+        );
+        insert lead;
+        return lead;
     }
 
     /**
-     * Creates and inserts a single Contact linked to the given Account.
+     * Creates and inserts a list of Leads for bulk/governor-limit tests.
      *
-     * @param  firstName  Contact first name.
-     * @param  lastName   Contact last name.
-     * @param  accountId  Id of the parent Account.
-     * @return Inserted Contact with Id populated.
+     * @param  count  Number of Lead records to create.
+     * @return List of inserted Lead records.
      */
-    public static Contact createContact(String firstName, String lastName, Id accountId) {
+    public static List<Lead> createLeads(Integer count) {
+        List<Lead> leads = new List<Lead>();
+        for (Integer i = 0; i < count; i++) {
+            leads.add(new Lead(
+                FirstName    = 'Test',
+                LastName     = 'Lead ' + i,
+                Company      = 'Bulk Corp ' + i,
+                Email        = 'lead' + i + '@bulkcorp.example.com',
+                Status       = 'Open - Not Contacted',
+                Conversion_Amount__c = 1000.00 * i
+            ));
+        }
+        insert leads;
+        return leads;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Account Builders
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Creates and inserts an Account with a given name.
+     *
+     * @param  name  Account.Name
+     * @return Inserted Account record.
+     */
+    public static Account createAccount(String name) {
+        Account acct = new Account(
+            Name        = name,
+            Industry    = 'Technology',
+            Phone       = '415-555-0200',
+            Website     = 'https://www.' + name.replaceAll('\\s+', '').toLowerCase() + '.example.com',
+            BillingStreet     = '456 Market St',
+            BillingCity       = 'San Francisco',
+            BillingState      = 'CA',
+            BillingPostalCode = '94105'
+        );
+        insert acct;
+        return acct;
+    }
+
+    /**
+     * Creates and inserts multiple Account records for bulk tests.
+     *
+     * @param  count  Number of Account records to create.
+     * @return List of inserted Account records.
+     */
+    public static List<Account> createAccounts(Integer count) {
+        List<Account> accounts = new List<Account>();
+        for (Integer i = 0; i < count; i++) {
+            accounts.add(new Account(Name = 'Bulk Account ' + i));
+        }
+        insert accounts;
+        return accounts;
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    //  Contact Builders
+    // ─────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Creates and inserts a Contact associated with the given Account.
+     *
+     * @param  accountId   Id of the parent Account.
+     * @param  firstName   Contact.FirstName
+     * @param  lastName    Contact.LastName
+     * @param  email       Contact.Email (used for duplicate matching)
+     * @return Inserted Contact record.
+     */
+    public static Contact createContact(
+        Id accountId,
+        String firstName,
+        String lastName,
+        String email
+    ) {
         Contact con = new Contact(
-            FirstName = firstName,
-            LastName  = lastName,
-            AccountId = accountId
+            AccountId   = accountId,
+            FirstName   = firstName,
+            LastName    = lastName,
+            Email       = email,
+            Phone       = '415-555-0300',
+            MobilePhone = '415-555-0301',
+            Title       = 'VP Sales'
         );
         insert con;
         return con;
-    }
-
-    /**
-     * Creates and inserts a single Case.
-     *
-     * @param  subject    Case subject line.
-     * @param  accountId  Id of the related Account (may be null).
-     * @param  contactId  Id of the related Contact (may be null).
-     * @return Inserted Case with Id populated.
-     */
-    public static Case createCase(String subject, Id accountId, Id contactId) {
-        Case c = new Case(
-            Subject   = subject,
-            AccountId = accountId,
-            ContactId = contactId,
-            Status    = 'New',
-            Priority  = 'Medium'
-        );
-        insert c;
-        return c;
-    }
-
-    /**
-     * Creates and inserts N bare Cases attached to the given Account.
-     * Used for bulk-path testing (200+ records).
-     *
-     * @param  count      Number of cases to create.
-     * @param  accountId  Id of the parent Account.
-     * @return Inserted List<Case> with Ids populated.
-     */
-    public static List<Case> createCases(Integer count, Id accountId) {
-        List<Case> cases = new List<Case>();
-        for (Integer i = 0; i < count; i++) {
-            cases.add(new Case(
-                Subject   = 'Bulk Test Case ' + i,
-                AccountId = accountId,
-                Status    = 'New',
-                Priority  = 'Medium'
-            ));
-        }
-        insert cases;
-        return cases;
-    }
-
-    /**
-     * Creates and inserts a successful Case_Transfer_Summary__c record.
-     *
-     * @param  caseId       Id of the parent Case.
-     * @param  summaryText  The summary body text.
-     * @return Inserted Case_Transfer_Summary__c with Id populated.
-     */
-    public static Case_Transfer_Summary__c createCaseTransferSummary(Id caseId, String summaryText) {
-        Case_Transfer_Summary__c summary = new Case_Transfer_Summary__c(
-            Case__c              = caseId,
-            Summary_Text__c      = summaryText,
-            Transfer_Timestamp__c = System.now(),
-            Model_Name__c        = 'gpt-4',
-            Model_Version__c     = '1.0',
-            Generation_Status__c = 'Success'
-        );
-        insert summary;
-        return summary;
     }
 }

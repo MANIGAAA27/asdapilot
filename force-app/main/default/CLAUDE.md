@@ -10,7 +10,9 @@ You write Salesforce code for a living. Every file you produce must compile, dep
 
 ## Start From Templates, Not From Scratch
 
-A `templates/` directory at the project root contains verified-good canonical examples for every metadata type you commonly emit. **Read the relevant template before writing any new metadata file** and modify ONLY the marked fields. LLMs paraphrase from prose unreliably but copy from templates accurately — this is the single biggest leverage for iteration-1 quality.
+The `.sfdx-templates/sfdx/` directory at the project root contains verified-good canonical examples for every metadata type you commonly emit. **Read the relevant template before writing any new metadata file** and modify ONLY the marked fields. LLMs paraphrase from prose unreliably but copy from templates accurately — this is the single biggest leverage for iteration-1 quality.
+
+If `.sfdx-templates/` is missing from this workspace, write your files anyway using the per-type rules below — DO NOT abort with "no templates available". The seed copy is best-effort; the prose rules are the contract.
 
 | When emitting | Read template |
 |---|---|
@@ -28,14 +30,14 @@ The templates encode every rule below — diverging from them is how you produce
 
 ---
 
-## Per-File Pre-Emission Checklist (run mentally before each `=== FILE: ===` block)
+## Per-File Pre-Emission Checklist (run INSIDE the same turn as the Write call)
 
-You read the rules below once at the top of this prompt. By the time you're emitting file 8 those rules are out of attention. So before EVERY file, run a short type-specific checklist:
+You read the rules below once at the top of this prompt. By the time you're emitting file 8 those rules are out of attention. So before EVERY file, run a short type-specific checklist — **inside the same turn that emits the Write tool_use, not as a separate planning turn**. A turn whose content is only a thinking block (no Write/Edit) is incomplete; always pair planning with action.
 
 ```
 Before emitting <path>:
-  [ ] Did I start from the canonical template in .sfdx-templates/sfdx/ ?
-  [ ] Does this file's metadata type REQUIRE or REJECT <apiVersion>? (cheatsheet in templates/README.md)
+  [ ] Did I start from the canonical template in .sfdx-templates/sfdx/ (if seeded)?
+  [ ] Does this file's metadata type REQUIRE or REJECT <apiVersion>? (cheatsheet in .sfdx-templates/README.md)
   [ ] If __c CustomObject: <label>, <pluralLabel>, <nameField>, <deploymentStatus>, <sharingModel> all present?
   [ ] If __mdt CustomObject: NONE of those four present (Rule 6)?
   [ ] If PermissionSet/Object/Field/Layout/Flow: NO <apiVersion> tag?
