@@ -4,5 +4,10 @@
     <label>Case</label>
     <type>MasterDetail</type>
     <referenceTo>Case</referenceTo>
-    <relationshipName>Case_Transfer_Summaries</relationshipName>
+    <relationshipLabel>Transfer Summaries</relationshipLabel>
+    <relationshipName>Transfer_Summaries</relationshipName>
+    <required>true</required>
+    <trackTrending>false</trackTrending>
+    <writeRequiresMasterRead>true</writeRequiresMasterRead>
+    <description>The Case record to which this summary belongs. This relationship is mandatory.</description>
 </CustomField>
