@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Linked_Opportunity__c</fullName>
+    <label>Linked Opportunity</label>
+    <description>The auto-created Opportunity linked to this Deal Registration</description>
+    <type>Lookup</type>
+    <referenceTo>Opportunity</referenceTo>
+    <relationshipLabel>Deal Registrations</relationshipLabel>
+    <relationshipName>Deal_Registrations</relationshipName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <required>false</required>
+</CustomField>
