@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "LWC_lead_Conversion",
+      "package": "Partner_Registration_Automation",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "LWC_lead_Conversion",
+  "name": "Partner_Registration_Automation",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
