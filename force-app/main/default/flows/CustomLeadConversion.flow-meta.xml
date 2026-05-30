@@ -1,0 +1,1189 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Custom Lead Conversion</label>
+    <description>Replicates the standard Lightning Experience Lead Conversion process. Guides the user through Account, Contact, and Opportunity options, pre-populating fields from the Lead. Calls CustomLeadConversionFlowHandler.convertLead() to execute Database.convertLead() and mark the Lead as converted.</description>
+    <interviewLabel>Custom Lead Conversion {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ================================================================ -->
+    <!-- START                                                              -->
+    <!-- ================================================================ -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>GetLeadRecord</targetReference>
+        </connector>
+    </start>
+
+    <!-- ================================================================ -->
+    <!-- FORMULA RESOURCES                                                  -->
+    <!-- ================================================================ -->
+    <formulas>
+        <name>endOfQuarterDate</name>
+        <dataType>Date</dataType>
+        <expression>IF(MONTH(TODAY()) &lt;= 3, DATE(YEAR(TODAY()), 3, 31), IF(MONTH(TODAY()) &lt;= 6, DATE(YEAR(TODAY()), 6, 30), IF(MONTH(TODAY()) &lt;= 9, DATE(YEAR(TODAY()), 9, 30), DATE(YEAR(TODAY()), 12, 31))))</expression>
+    </formulas>
+
+    <!-- ================================================================ -->
+    <!-- VARIABLES                                                          -->
+    <!-- ================================================================ -->
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>leadRecord</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Lead</objectType>
+    </variables>
+    <variables>
+        <name>existingAccount</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Account</objectType>
+    </variables>
+    <variables>
+        <name>existingContact</name>
+        <dataType>SObject</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <objectType>Contact</objectType>
+    </variables>
+    <variables>
+        <name>existingAccountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>existingAccountName</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>existingContactId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>existingContactName</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>accountChoiceDefault</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>contactChoiceDefault</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>finalAccountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>finalContactId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>doCreateOpportunity</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>conversionIsSuccess</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>conversionErrorMessage</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>conversionAccountId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <name>conversionContactId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <name>conversionOpportunityId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- ================================================================ -->
+    <!-- CHOICES                                                            -->
+    <!-- ================================================================ -->
+    <choices>
+        <name>choiceNewAccount</name>
+        <choiceText>Create New Account</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>NEW</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceExistingAccount</name>
+        <choiceText>Attach to Existing Account</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>EXISTING</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceNewContact</name>
+        <choiceText>Create New Contact</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>NEW</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceExistingContact</name>
+        <choiceText>Attach to Existing Contact</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>EXISTING</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceCreateOpportunity</name>
+        <choiceText>Create Opportunity</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>CREATE</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceSkipOpportunity</name>
+        <choiceText>Do Not Create Opportunity</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>SKIP</stringValue>
+        </value>
+    </choices>
+
+    <!-- ================================================================ -->
+    <!-- RECORD LOOKUPS                                                     -->
+    <!-- ================================================================ -->
+    <recordLookups>
+        <name>GetLeadRecord</name>
+        <label>Get Lead Record</label>
+        <locationX>176</locationX>
+        <locationY>120</locationY>
+        <assignNullValuesIfNoRecordsFound>false</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CheckAlreadyConverted</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Lead</object>
+        <outputReference>leadRecord</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>IsConverted</queriedFields>
+        <queriedFields>Company</queriedFields>
+        <queriedFields>FirstName</queriedFields>
+        <queriedFields>LastName</queriedFields>
+        <queriedFields>Title</queriedFields>
+        <queriedFields>Email</queriedFields>
+        <queriedFields>Phone</queriedFields>
+        <queriedFields>MobilePhone</queriedFields>
+        <queriedFields>Website</queriedFields>
+        <queriedFields>Industry</queriedFields>
+        <queriedFields>Street</queriedFields>
+        <queriedFields>City</queriedFields>
+        <queriedFields>State</queriedFields>
+        <queriedFields>PostalCode</queriedFields>
+        <queriedFields>AnnualRevenue</queriedFields>
+    </recordLookups>
+
+    <recordLookups>
+        <name>FindExistingAccount</name>
+        <label>Find Existing Account by Company Name</label>
+        <locationX>176</locationX>
+        <locationY>480</locationY>
+        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>FindExistingContact</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Name</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>leadRecord.Company</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Account</object>
+        <outputReference>existingAccount</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+    </recordLookups>
+
+    <recordLookups>
+        <name>FindExistingContact</name>
+        <label>Find Existing Contact by Email</label>
+        <locationX>176</locationX>
+        <locationY>600</locationY>
+        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CheckFoundAccount</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Email</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>leadRecord.Email</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Contact</object>
+        <outputReference>existingContact</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+    </recordLookups>
+
+    <!-- ================================================================ -->
+    <!-- DECISIONS                                                          -->
+    <!-- ================================================================ -->
+    <decisions>
+        <name>CheckAlreadyConverted</name>
+        <label>Is Lead Already Converted?</label>
+        <locationX>176</locationX>
+        <locationY>240</locationY>
+        <defaultConnector>
+            <targetReference>FindExistingAccount</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not Yet Converted</defaultConnectorLabel>
+        <rules>
+            <name>LeadAlreadyConverted</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>leadRecord.IsConverted</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>AlreadyConvertedScreen</targetReference>
+            </connector>
+            <label>Already Converted</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>CheckFoundAccount</name>
+        <label>Existing Account Found?</label>
+        <locationX>176</locationX>
+        <locationY>720</locationY>
+        <defaultConnector>
+            <targetReference>SetNewAccountDefaults</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Matching Account</defaultConnectorLabel>
+        <rules>
+            <name>AccountFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>existingAccount</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetExistingAccountDefaults</targetReference>
+            </connector>
+            <label>Account Found</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>CheckFoundContact</name>
+        <label>Existing Contact Found?</label>
+        <locationX>176</locationX>
+        <locationY>960</locationY>
+        <defaultConnector>
+            <targetReference>SetNewContactDefaults</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Matching Contact</defaultConnectorLabel>
+        <rules>
+            <name>ContactFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>existingContact</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetExistingContactDefaults</targetReference>
+            </connector>
+            <label>Contact Found</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>AccountSelectionDecision</name>
+        <label>Account Selection: Use Existing?</label>
+        <locationX>176</locationX>
+        <locationY>1560</locationY>
+        <defaultConnector>
+            <targetReference>ContactSelectionDecision</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Create New Account</defaultConnectorLabel>
+        <rules>
+            <name>UseExistingAccount</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>accountChoiceRadio</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>EXISTING</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>AssignFinalAccountId</targetReference>
+            </connector>
+            <label>Use Existing Account</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>ContactSelectionDecision</name>
+        <label>Contact Selection: Use Existing?</label>
+        <locationX>176</locationX>
+        <locationY>1800</locationY>
+        <defaultConnector>
+            <targetReference>OpportunityCreationDecision</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Create New Contact</defaultConnectorLabel>
+        <rules>
+            <name>UseExistingContact</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>contactChoiceRadio</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>EXISTING</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>AssignFinalContactId</targetReference>
+            </connector>
+            <label>Use Existing Contact</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>OpportunityCreationDecision</name>
+        <label>Create Opportunity?</label>
+        <locationX>176</locationX>
+        <locationY>2040</locationY>
+        <defaultConnector>
+            <targetReference>SetSkipOpportunity</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Skip Opportunity</defaultConnectorLabel>
+        <rules>
+            <name>CreateOpportunityRule</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>oppChoiceRadio</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>CREATE</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetCreateOpportunity</targetReference>
+            </connector>
+            <label>Create Opportunity</label>
+        </rules>
+    </decisions>
+
+    <decisions>
+        <name>CheckConversionResult</name>
+        <label>Conversion Successful?</label>
+        <locationX>176</locationX>
+        <locationY>2400</locationY>
+        <defaultConnector>
+            <targetReference>ConversionErrorScreen</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Conversion Failed</defaultConnectorLabel>
+        <rules>
+            <name>ConversionSucceeded</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>conversionIsSuccess</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SuccessScreen</targetReference>
+            </connector>
+            <label>Conversion Succeeded</label>
+        </rules>
+    </decisions>
+
+    <!-- ================================================================ -->
+    <!-- ASSIGNMENTS                                                        -->
+    <!-- ================================================================ -->
+    <assignments>
+        <name>SetExistingAccountDefaults</name>
+        <label>Set Existing Account Defaults</label>
+        <locationX>50</locationX>
+        <locationY>840</locationY>
+        <assignmentItems>
+            <assignToReference>existingAccountId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingAccount.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>existingAccountName</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingAccount.Name</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>accountChoiceDefault</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>EXISTING</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>CheckFoundContact</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>SetNewAccountDefaults</name>
+        <label>Set New Account Defaults</label>
+        <locationX>302</locationX>
+        <locationY>840</locationY>
+        <assignmentItems>
+            <assignToReference>accountChoiceDefault</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>NEW</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>CheckFoundContact</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>SetExistingContactDefaults</name>
+        <label>Set Existing Contact Defaults</label>
+        <locationX>50</locationX>
+        <locationY>1080</locationY>
+        <assignmentItems>
+            <assignToReference>existingContactId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingContact.Id</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>existingContactName</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingContact.Name</elementReference>
+            </value>
+        </assignmentItems>
+        <assignmentItems>
+            <assignToReference>contactChoiceDefault</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>EXISTING</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>AccountConversionScreen</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>SetNewContactDefaults</name>
+        <label>Set New Contact Defaults</label>
+        <locationX>302</locationX>
+        <locationY>1080</locationY>
+        <assignmentItems>
+            <assignToReference>contactChoiceDefault</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>NEW</stringValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>AccountConversionScreen</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>AssignFinalAccountId</name>
+        <label>Assign Existing Account Id</label>
+        <locationX>50</locationX>
+        <locationY>1680</locationY>
+        <assignmentItems>
+            <assignToReference>finalAccountId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingAccountId</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>ContactSelectionDecision</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>AssignFinalContactId</name>
+        <label>Assign Existing Contact Id</label>
+        <locationX>50</locationX>
+        <locationY>1920</locationY>
+        <assignmentItems>
+            <assignToReference>finalContactId</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>existingContactId</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>OpportunityCreationDecision</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>SetCreateOpportunity</name>
+        <label>Set Create Opportunity = true</label>
+        <locationX>50</locationX>
+        <locationY>2160</locationY>
+        <assignmentItems>
+            <assignToReference>doCreateOpportunity</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>ExecuteConversion</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>SetSkipOpportunity</name>
+        <label>Set Create Opportunity = false</label>
+        <locationX>302</locationX>
+        <locationY>2160</locationY>
+        <assignmentItems>
+            <assignToReference>doCreateOpportunity</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>ExecuteConversion</targetReference>
+        </connector>
+    </assignments>
+
+    <assignments>
+        <name>AssignFaultMessage</name>
+        <label>Capture Fault Message</label>
+        <locationX>572</locationX>
+        <locationY>2280</locationY>
+        <assignmentItems>
+            <assignToReference>conversionErrorMessage</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>$Flow.FaultMessage</elementReference>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>ConversionErrorScreen</targetReference>
+        </connector>
+    </assignments>
+
+    <!-- ================================================================ -->
+    <!-- ACTION CALL — InvocableMethod                                      -->
+    <!-- ================================================================ -->
+    <actionCalls>
+        <name>ExecuteConversion</name>
+        <label>Execute Lead Conversion</label>
+        <locationX>176</locationX>
+        <locationY>2280</locationY>
+        <actionName>CustomLeadConversionFlowHandler</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>CheckConversionResult</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>AssignFaultMessage</targetReference>
+        </faultConnector>
+        <inputParameters>
+            <name>leadId</name>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>existingAccountId</name>
+            <value>
+                <elementReference>finalAccountId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>existingContactId</name>
+            <value>
+                <elementReference>finalContactId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>createOpportunity</name>
+            <value>
+                <elementReference>doCreateOpportunity</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>opportunityName</name>
+            <value>
+                <elementReference>oppNameField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>opportunityAmount</name>
+            <value>
+                <elementReference>oppAmountField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>opportunityCloseDate</name>
+            <value>
+                <elementReference>oppCloseDateField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountName</name>
+            <value>
+                <elementReference>acctNameField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountIndustry</name>
+            <value>
+                <elementReference>acctIndustryField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountWebsite</name>
+            <value>
+                <elementReference>acctWebsiteField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountPhone</name>
+            <value>
+                <elementReference>acctPhoneField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountBillingStreet</name>
+            <value>
+                <elementReference>acctStreetField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountBillingCity</name>
+            <value>
+                <elementReference>acctCityField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountBillingState</name>
+            <value>
+                <elementReference>acctStateField</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>accountBillingPostalCode</name>
+            <value>
+                <elementReference>acctPostalCodeField</elementReference>
+            </value>
+        </inputParameters>
+        <outputParameters>
+            <assignToReference>conversionIsSuccess</assignToReference>
+            <name>isSuccess</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>conversionErrorMessage</assignToReference>
+            <name>errorMessage</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>conversionAccountId</assignToReference>
+            <name>convertedAccountId</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>conversionContactId</assignToReference>
+            <name>convertedContactId</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>conversionOpportunityId</assignToReference>
+            <name>convertedOpportunityId</name>
+        </outputParameters>
+    </actionCalls>
+
+    <!-- ================================================================ -->
+    <!-- SCREENS                                                            -->
+    <!-- ================================================================ -->
+
+    <!-- Screen: Already Converted (terminal) -->
+    <screens>
+        <name>AlreadyConvertedScreen</name>
+        <label>Lead Already Converted</label>
+        <locationX>572</locationX>
+        <locationY>360</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <fields>
+            <name>alreadyConvertedMsg</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;This Lead has already been converted.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;No further action is required. Click Finish to close this window.&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- Screen 1: Account Conversion Options -->
+    <screens>
+        <name>AccountConversionScreen</name>
+        <label>Convert Lead: Account</label>
+        <locationX>176</locationX>
+        <locationY>1200</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>ContactConversionScreen</targetReference>
+        </connector>
+        <fields>
+            <name>acctHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;h2 style="font-size:1.25rem;font-weight:600;"&gt;Account&lt;/h2&gt;&lt;p&gt;Review and confirm Account details. If a matching Account was found, you can attach the Lead to it or create a new Account.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>acctExistingInfo</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Matching Account found:&lt;/b&gt; {!existingAccountName}&lt;/p&gt;</fieldText>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>existingAccountId</leftValueReference>
+                    <operator>IsNull</operator>
+                    <rightValue>
+                        <booleanValue>false</booleanValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>accountChoiceRadio</name>
+            <fieldType>RadioButtons</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <choiceReferences>choiceNewAccount</choiceReferences>
+            <choiceReferences>choiceExistingAccount</choiceReferences>
+            <defaultValue>
+                <elementReference>accountChoiceDefault</elementReference>
+            </defaultValue>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>existingAccountId</leftValueReference>
+                    <operator>IsNull</operator>
+                    <rightValue>
+                        <booleanValue>false</booleanValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>acctFieldsHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Account Information&lt;/b&gt; — review and edit the values below before proceeding.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>acctNameField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Company</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctIndustryField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Industry</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctWebsiteField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Website</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctPhoneField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Phone</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctStreetField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Street</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctCityField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.City</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctStateField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.State</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>acctPostalCodeField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.PostalCode</elementReference>
+            </defaultValue>
+        </fields>
+    </screens>
+
+    <!-- Screen 2: Contact Conversion Options -->
+    <screens>
+        <name>ContactConversionScreen</name>
+        <label>Convert Lead: Contact</label>
+        <locationX>176</locationX>
+        <locationY>1320</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>OpportunityConversionScreen</targetReference>
+        </connector>
+        <fields>
+            <name>ctctHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;h2 style="font-size:1.25rem;font-weight:600;"&gt;Contact&lt;/h2&gt;&lt;p&gt;Review and confirm Contact details. If a matching Contact was found by email, you can attach the Lead to it or create a new Contact.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>ctctExistingInfo</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Matching Contact found:&lt;/b&gt; {!existingContactName}&lt;/p&gt;</fieldText>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>existingContactId</leftValueReference>
+                    <operator>IsNull</operator>
+                    <rightValue>
+                        <booleanValue>false</booleanValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>contactChoiceRadio</name>
+            <fieldType>RadioButtons</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <choiceReferences>choiceNewContact</choiceReferences>
+            <choiceReferences>choiceExistingContact</choiceReferences>
+            <defaultValue>
+                <elementReference>contactChoiceDefault</elementReference>
+            </defaultValue>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>existingContactId</leftValueReference>
+                    <operator>IsNull</operator>
+                    <rightValue>
+                        <booleanValue>false</booleanValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>ctctFieldsHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Contact Information&lt;/b&gt; — review and edit the values below before proceeding.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>ctctFirstNameField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.FirstName</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>ctctLastNameField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.LastName</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>ctctTitleField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Title</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>ctctEmailField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Email</elementReference>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>ctctMobilePhoneField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.MobilePhone</elementReference>
+            </defaultValue>
+        </fields>
+    </screens>
+
+    <!-- Screen 3: Opportunity Options -->
+    <screens>
+        <name>OpportunityConversionScreen</name>
+        <label>Convert Lead: Opportunity</label>
+        <locationX>176</locationX>
+        <locationY>1440</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>AccountSelectionDecision</targetReference>
+        </connector>
+        <fields>
+            <name>oppHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;h2 style="font-size:1.25rem;font-weight:600;"&gt;Opportunity&lt;/h2&gt;&lt;p&gt;Optionally create an Opportunity from this Lead. The close date defaults to the end of the current quarter.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>oppChoiceRadio</name>
+            <fieldType>RadioButtons</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <choiceReferences>choiceCreateOpportunity</choiceReferences>
+            <choiceReferences>choiceSkipOpportunity</choiceReferences>
+            <defaultValue>
+                <stringValue>CREATE</stringValue>
+            </defaultValue>
+        </fields>
+        <fields>
+            <name>oppNameField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.Company</elementReference>
+            </defaultValue>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>oppChoiceRadio</leftValueReference>
+                    <operator>EqualTo</operator>
+                    <rightValue>
+                        <stringValue>CREATE</stringValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>oppAmountField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>Currency</dataType>
+            <isRequired>false</isRequired>
+            <defaultValue>
+                <elementReference>leadRecord.AnnualRevenue</elementReference>
+            </defaultValue>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>oppChoiceRadio</leftValueReference>
+                    <operator>EqualTo</operator>
+                    <rightValue>
+                        <stringValue>CREATE</stringValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+        <fields>
+            <name>oppCloseDateField</name>
+            <fieldType>InputField</fieldType>
+            <dataType>Date</dataType>
+            <isRequired>true</isRequired>
+            <defaultValue>
+                <elementReference>endOfQuarterDate</elementReference>
+            </defaultValue>
+            <visibilityRule>
+                <conditionLogic>and</conditionLogic>
+                <conditions>
+                    <leftValueReference>oppChoiceRadio</leftValueReference>
+                    <operator>EqualTo</operator>
+                    <rightValue>
+                        <stringValue>CREATE</stringValue>
+                    </rightValue>
+                </conditions>
+            </visibilityRule>
+        </fields>
+    </screens>
+
+    <!-- Screen: Conversion Success (terminal) -->
+    <screens>
+        <name>SuccessScreen</name>
+        <label>Lead Conversion Complete</label>
+        <locationX>176</locationX>
+        <locationY>2520</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <fields>
+            <name>successMsg</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Lead Successfully Converted!&lt;/b&gt;&lt;/p&gt;&lt;p&gt;The Lead has been converted and is now read-only. Associated Account, Contact, and Opportunity records have been created or linked.&lt;/p&gt;&lt;p&gt;Account Id: {!conversionAccountId}&lt;br/&gt;Contact Id: {!conversionContactId}&lt;br/&gt;Opportunity Id: {!conversionOpportunityId}&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- Screen: Conversion Error (terminal) -->
+    <screens>
+        <name>ConversionErrorScreen</name>
+        <label>Conversion Error</label>
+        <locationX>572</locationX>
+        <locationY>2520</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <fields>
+            <name>convErrorMsg</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;An error occurred during Lead conversion.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;Please contact your Salesforce Administrator with the following details:&lt;/p&gt;&lt;p&gt;{!conversionErrorMessage}&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+</Flow>

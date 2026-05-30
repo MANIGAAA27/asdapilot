@@ -1,20 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
   <types>
-    <members>DealRegistrationHandler</members>
-    <members>DealRegistrationHandlerTest</members>
+    <members>CustomLeadConversionFlowHandler</members>
+    <members>CustomLeadConversionFlowHandlerTest</members>
     <members>TestDataFactory</members>
     <name>ApexClass</name>
-  </types>
-  <types>
-    <members>Deal_Registration__c</members>
-    <members>Deal_Registration_Field_Mapping__mdt</members>
-    <members>Opportunity</members>
-    <name>CustomObject</name>
-  </types>
-  <types>
-    <members>DealRegistrationTrigger</members>
-    <name>ApexTrigger</name>
   </types>
   <version>59.0</version>
 </Package>

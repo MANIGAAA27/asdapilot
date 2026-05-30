@@ -3,12 +3,12 @@
     {
       "path": "force-app",
       "default": true,
-      "package": "Partner_Registration_Automation",
+      "package": "Custom_Lead_Conversion__Screen_Flow",
       "versionName": "ver 0.1",
       "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "name": "Partner_Registration_Automation",
+  "name": "Custom_Lead_Conversion__Screen_Flow",
   "namespace": "",
   "sourceApiVersion": "59.0",
   "sfdcLoginUrl": "https://login.salesforce.com"
