@@ -3,11 +3,40 @@
     <types>
         <members>DealRegistrationHandler</members>
         <members>DealRegistrationHandlerTest</members>
+        <members>TestDataFactory</members>
         <name>ApexClass</name>
     </types>
     <types>
         <members>DealRegistrationTrigger</members>
         <name>ApexTrigger</name>
+    </types>
+    <types>
+        <members>Deal_Registration__c</members>
+        <members>Deal_Registration_Field_Mapping__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Deal_Registration__c.Partner_Account__c</members>
+        <members>Deal_Registration__c.Primary_Partner_Contact__c</members>
+        <members>Deal_Registration__c.Estimated_Deal_Value__c</members>
+        <members>Deal_Registration__c.Projected_Close_Date__c</members>
+        <members>Deal_Registration__c.Description__c</members>
+        <members>Deal_Registration__c.Status__c</members>
+        <members>Deal_Registration__c.Opportunity__c</members>
+        <members>Opportunity.Deal_Registration__c</members>
+        <members>Opportunity.Primary_Contact__c</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Source_Field_API_Name__c</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Target_Field_API_Name__c</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Is_Active__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Deal_Registration_Field_Mapping__mdt.Partner_Account</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Primary_Partner_Contact</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Estimated_Deal_Value</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Projected_Close_Date</members>
+        <members>Deal_Registration_Field_Mapping__mdt.Description</members>
+        <name>CustomMetadata</name>
     </types>
     <version>62.0</version>
 </Package>

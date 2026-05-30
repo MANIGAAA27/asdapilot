@@ -3,11 +3,12 @@
   <types>
     <members>DealRegistrationHandler</members>
     <members>DealRegistrationHandlerTest</members>
+    <members>TestDataFactory</members>
     <name>ApexClass</name>
   </types>
   <types>
-    <members>Deal_Field_Mapping__mdt</members>
     <members>Deal_Registration__c</members>
+    <members>Deal_Registration_Field_Mapping__mdt</members>
     <members>Opportunity</members>
     <name>CustomObject</name>
   </types>

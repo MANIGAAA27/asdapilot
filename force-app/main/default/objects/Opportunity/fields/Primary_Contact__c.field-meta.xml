@@ -2,11 +2,11 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Primary_Contact__c</fullName>
     <label>Primary Contact</label>
-    <description>Primary partner contact associated with this Opportunity. Mapped from Deal Registration Primary_Partner_Contact__c.</description>
+    <description>Primary contact for this Opportunity. Populated from the Deal Registration Primary Partner Contact field during synchronization.</description>
     <type>Lookup</type>
     <referenceTo>Contact</referenceTo>
     <relationshipLabel>Opportunities (Primary Contact)</relationshipLabel>
-    <relationshipName>Primary_Contact_Opportunities</relationshipName>
+    <relationshipName>Opportunities_Primary_Contact</relationshipName>
     <deleteConstraint>SetNull</deleteConstraint>
     <required>false</required>
 </CustomField>

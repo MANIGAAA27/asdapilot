@@ -2,22 +2,21 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Status__c</fullName>
     <label>Status</label>
-    <description>Lifecycle status of the Deal Registration. Synchronization to Opportunity ceases when set to Approved.</description>
+    <description>Lifecycle status of the Deal Registration. When set to Approved, synchronization to the linked Opportunity ceases.</description>
     <type>Picklist</type>
-    <required>false</required>
     <valueSet>
         <restricted>true</restricted>
         <valueSetDefinition>
             <sorted>false</sorted>
             <value>
-                <fullName>Pending</fullName>
+                <fullName>Submitted</fullName>
                 <default>true</default>
-                <label>Pending</label>
+                <label>Submitted</label>
             </value>
             <value>
-                <fullName>In Review</fullName>
+                <fullName>Under Review</fullName>
                 <default>false</default>
-                <label>In Review</label>
+                <label>Under Review</label>
             </value>
             <value>
                 <fullName>Approved</fullName>
@@ -31,4 +30,5 @@
             </value>
         </valueSetDefinition>
     </valueSet>
+    <required>false</required>
 </CustomField>

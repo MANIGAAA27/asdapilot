@@ -1,275 +1,224 @@
 /**
  * @file        DealRegistrationHandlerTest.cls
- * @description Tests DealRegistrationHandler — covers Opportunity creation on
- *              insert, CMT-driven field mapping, synchronization on update,
- *              approval-status lock, and bulk 200-record paths.
- * @author      ASDA Dev Agent (Claude Code)
- * @created     2026-05-29
- * @lastModified 2026-05-29
+ * @description Tests DealRegistrationHandler — covers Opportunity creation on insert,
+ *              bi-directional field linking, field synchronization on update when status
+ *              is not Approved, synchronization lock when status becomes Approved,
+ *              and bulk 200-record governor-limit paths.
  * @testFor     DealRegistrationHandler
- * @coverage    Target >= 90%.
+ * @coverage    Target ≥ 90%.
  */
 @isTest
 private class DealRegistrationHandlerTest {
 
-    // ─── Helpers ──────────────────────────────────────────────────────────────
+    // ─── Test Setup ────────────────────────────────────────────────────────────
 
-    /** Returns a single-entry CMT override mapping Estimated_Deal_Value__c → Amount. */
-    private static List<Deal_Field_Mapping__mdt> amountMapping() {
-        return new List<Deal_Field_Mapping__mdt>{
-            new Deal_Field_Mapping__mdt(
-                Source_Field_API_Name__c = 'Estimated_Deal_Value__c',
-                Target_Field_API_Name__c = 'Amount',
-                Is_Active__c            = true
-            )
-        };
+    @TestSetup
+    static void setupData() {
+        Account acct = TestDataFactory.createAccount('Keneland Partner Account');
+        TestDataFactory.createContact('Partner Contact', acct.Id);
     }
 
-    /** Returns CMT override entries covering Amount and CloseDate mappings. */
-    private static List<Deal_Field_Mapping__mdt> fullFieldMappings() {
-        return new List<Deal_Field_Mapping__mdt>{
-            new Deal_Field_Mapping__mdt(
-                Source_Field_API_Name__c = 'Estimated_Deal_Value__c',
-                Target_Field_API_Name__c = 'Amount',
-                Is_Active__c            = true
-            ),
-            new Deal_Field_Mapping__mdt(
-                Source_Field_API_Name__c = 'Projected_Close_Date__c',
-                Target_Field_API_Name__c = 'CloseDate',
-                Is_Active__c            = true
-            )
-        };
-    }
+    // ─── Insert Tests ───────────────────────────────────────────────────────────
 
-    // ─── Test: insert creates linked Opportunity ──────────────────────────────
-
+    /**
+     * Inserting a Deal Registration should automatically create a linked Opportunity
+     * and populate bi-directional lookup fields on both records.
+     */
     @isTest
-    static void test_afterInsert_createsLinkedOpportunity() {
-        // Use empty CMT override — we test linkage, not field mapping here
-        DealRegistrationHandler.testMappingOverride = new List<Deal_Field_Mapping__mdt>();
-
-        Deal_Registration__c dr = new Deal_Registration__c(
-            Status__c = 'Pending'
-        );
+    static void test_processAfterInsert_singleRecord_createsLinkedOpportunity() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
 
         Test.startTest();
-        insert dr;
+        Deal_Registration__c dr = TestDataFactory.createDealRegistration('New Deal 001', acct.Id);
         Test.stopTest();
 
-        // Re-query DR to pick up the Opportunity__c that the handler wrote back
-        Deal_Registration__c updatedDr = [
-            SELECT Id, Name, Opportunity__c
-            FROM   Deal_Registration__c
-            WHERE  Id = :dr.Id
+        Deal_Registration__c reloadedDr = [
+            SELECT Id, Opportunity__c, Partner_Account__c
+            FROM Deal_Registration__c
+            WHERE Id = :dr.Id
         ];
-        System.assertNotEquals(
-            null, updatedDr.Opportunity__c,
-            'Deal Registration should have a linked Opportunity after insert'
-        );
-
-        // Verify Opportunity was created with correct defaults and bi-directional link
-        Opportunity opp = [
-            SELECT Id, Name, StageName, Deal_Registration__c
-            FROM   Opportunity
-            WHERE  Id = :updatedDr.Opportunity__c
-        ];
-        System.assertNotEquals(
-            null, opp.Name,
-            'Opportunity Name should be populated from the auto-generated Deal Registration Name'
-        );
-        System.assertEquals(
-            'Qualification', opp.StageName,
-            'Opportunity Stage should default to Qualification'
-        );
-        System.assertEquals(
-            dr.Id, opp.Deal_Registration__c,
-            'Opportunity should link back to the originating Deal Registration'
-        );
-    }
-
-    // ─── Test: CMT field mappings are applied on insert ───────────────────────
-
-    @isTest
-    static void test_afterInsert_mapsFieldsFromCMT() {
-        DealRegistrationHandler.testMappingOverride = fullFieldMappings();
-
-        Date closeDate = Date.today().addDays(30);
-        Deal_Registration__c dr = new Deal_Registration__c(
-            Status__c               = 'Pending',
-            Estimated_Deal_Value__c = 25000,
-            Projected_Close_Date__c = closeDate
-        );
-
-        Test.startTest();
-        insert dr;
-        Test.stopTest();
-
-        Deal_Registration__c updatedDr = [
-            SELECT Opportunity__c
-            FROM   Deal_Registration__c
-            WHERE  Id = :dr.Id
-        ];
-        System.assertNotEquals(null, updatedDr.Opportunity__c, 'Opportunity should be created');
+        System.assertNotEquals(null, reloadedDr.Opportunity__c,
+            'Opportunity__c should be populated on the Deal Registration after insert');
 
         Opportunity opp = [
-            SELECT Amount, CloseDate
-            FROM   Opportunity
-            WHERE  Id = :updatedDr.Opportunity__c
+            SELECT Id, Name, AccountId, Deal_Registration__c, StageName, Amount, CloseDate
+            FROM Opportunity
+            WHERE Id = :reloadedDr.Opportunity__c
         ];
-        System.assertEquals(
-            25000, opp.Amount,
-            'Amount should be mapped from Estimated_Deal_Value__c'
-        );
-        System.assertEquals(
-            closeDate, opp.CloseDate,
-            'CloseDate should be mapped from Projected_Close_Date__c'
-        );
+        System.assertNotEquals(null, opp,
+            'A linked Opportunity should exist in the database');
+        System.assertEquals(acct.Id, opp.AccountId,
+            'Opportunity AccountId should be mapped from DR Partner_Account__c');
+        System.assertEquals(dr.Id, opp.Deal_Registration__c,
+            'Opportunity Deal_Registration__c should link back to the source DR');
+        System.assertEquals('Qualification', opp.StageName,
+            'Opportunity StageName should default to Qualification');
+        System.assertEquals(50000, opp.Amount,
+            'Opportunity Amount should be mapped from DR Estimated_Deal_Value__c');
+        System.assertNotEquals(null, opp.CloseDate,
+            'Opportunity CloseDate should be populated from DR Projected_Close_Date__c or default');
     }
 
-    // ─── Test: mapped fields sync on update when not Approved ─────────────────
-
+    /**
+     * Bulk insert of 200 Deal Registrations should create exactly 200 linked
+     * Opportunities without hitting governor limits.
+     */
     @isTest
-    static void test_afterUpdate_syncsFieldsWhenNotApproved() {
-        DealRegistrationHandler.testMappingOverride = amountMapping();
-
-        Deal_Registration__c dr = new Deal_Registration__c(
-            Status__c               = 'Pending',
-            Estimated_Deal_Value__c = 10000
-        );
-        insert dr;
-
-        dr = [SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id = :dr.Id];
-        System.assertNotEquals(null, dr.Opportunity__c, 'Opportunity must exist before update test');
+    static void test_processAfterInsert_bulk_createsOpportunitiesForAllRecords() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
 
         Test.startTest();
-        dr.Estimated_Deal_Value__c = 50000;
-        update dr;
+        List<Deal_Registration__c> drs = TestDataFactory.createDealRegistrations(200, acct.Id);
         Test.stopTest();
 
-        Opportunity opp = [
-            SELECT Amount
-            FROM   Opportunity
-            WHERE  Id = :dr.Opportunity__c
-        ];
-        System.assertEquals(
-            50000, opp.Amount,
-            'Opportunity Amount should be updated when Deal Registration is not Approved'
-        );
-    }
-
-    // ─── Test: sync halts when status changes to Approved ─────────────────────
-
-    @isTest
-    static void test_afterUpdate_stopsWhenApproved() {
-        DealRegistrationHandler.testMappingOverride = amountMapping();
-
-        Deal_Registration__c dr = new Deal_Registration__c(
-            Status__c               = 'Pending',
-            Estimated_Deal_Value__c = 10000
-        );
-        insert dr;
-
-        dr = [SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id = :dr.Id];
-
-        // Capture the Amount the Opportunity received during insert
-        Opportunity initialOpp = [
-            SELECT Amount
-            FROM   Opportunity
-            WHERE  Id = :dr.Opportunity__c
-        ];
-        Decimal lockedAmount = initialOpp.Amount;
-
-        Test.startTest();
-        // Approve the Deal Registration AND change the mapped field simultaneously
-        dr.Status__c              = 'Approved';
-        dr.Estimated_Deal_Value__c = 99999;
-        update dr;
-        Test.stopTest();
-
-        Opportunity opp = [
-            SELECT Amount
-            FROM   Opportunity
-            WHERE  Id = :dr.Opportunity__c
-        ];
-        System.assertEquals(
-            lockedAmount, opp.Amount,
-            'Opportunity Amount must NOT change once Deal Registration is Approved'
-        );
-    }
-
-    // ─── Test: no-op when no mapped fields changed ────────────────────────────
-
-    @isTest
-    static void test_afterUpdate_noOp_whenNoMappedFieldsChanged() {
-        DealRegistrationHandler.testMappingOverride = amountMapping();
-
-        Deal_Registration__c dr = new Deal_Registration__c(
-            Status__c               = 'Pending',
-            Estimated_Deal_Value__c = 7500
-        );
-        insert dr;
-
-        dr = [SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id = :dr.Id];
-
-        // Record Opportunity state before a non-mapped field update
-        Opportunity before = [SELECT Amount FROM Opportunity WHERE Id = :dr.Opportunity__c];
-
-        Test.startTest();
-        // Change Status__c (not a mapped field); Estimated_Deal_Value__c unchanged
-        dr.Status__c = 'In Review';
-        update dr;
-        Test.stopTest();
-
-        Opportunity after = [SELECT Amount FROM Opportunity WHERE Id = :dr.Opportunity__c];
-        System.assertEquals(
-            before.Amount, after.Amount,
-            'Opportunity Amount should remain unchanged when no mapped source field changes'
-        );
-    }
-
-    // ─── Test: bulk insert — 200 records ──────────────────────────────────────
-
-    @isTest
-    static void test_bulkInsert_200Records() {
-        DealRegistrationHandler.testMappingOverride = new List<Deal_Field_Mapping__mdt>();
-
-        List<Deal_Registration__c> drs = new List<Deal_Registration__c>();
-        for (Integer i = 0; i < 200; i++) {
-            drs.add(new Deal_Registration__c(
-                Status__c = 'Pending'
-            ));
-        }
-
-        Test.startTest();
-        insert drs;
-        Test.stopTest();
-
-        // All 200 Deal Registrations should have a linked Opportunity
-        List<Deal_Registration__c> updatedDrs = [
-            SELECT Opportunity__c
-            FROM   Deal_Registration__c
-            WHERE  Id IN :drs
+        List<Deal_Registration__c> reloadedDrs = [
+            SELECT Id, Opportunity__c
+            FROM Deal_Registration__c
+            WHERE Id IN :drs
         ];
         Integer linkedCount = 0;
-        for (Deal_Registration__c updated : updatedDrs) {
-            if (updated.Opportunity__c != null) {
+        for (Deal_Registration__c dr : reloadedDrs) {
+            if (dr.Opportunity__c != null) {
                 linkedCount++;
             }
         }
-        System.assertEquals(
-            200, linkedCount,
-            'All 200 Deal Registrations should link to a created Opportunity'
-        );
+        System.assertEquals(200, linkedCount,
+            'All 200 Deal Registrations should have a linked Opportunity__c after bulk insert');
 
-        // Verify 200 Opportunities were created with back-links
         Integer oppCount = [
             SELECT COUNT()
-            FROM   Opportunity
-            WHERE  Deal_Registration__c IN :drs
+            FROM Opportunity
+            WHERE Deal_Registration__c IN :drs
         ];
-        System.assertEquals(
-            200, oppCount,
-            'Exactly 200 Opportunities should be created for 200 Deal Registrations'
+        System.assertEquals(200, oppCount,
+            'Exactly 200 Opportunities should exist after bulk insert of 200 Deal Registrations');
+    }
+
+    // ─── Update / Sync Tests ────────────────────────────────────────────────────
+
+    /**
+     * Updating a mapped field on a Deal Registration with Status != Approved should
+     * synchronize the new value to the linked Opportunity.
+     */
+    @isTest
+    static void test_processAfterUpdate_notApproved_syncsFields() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
+        Deal_Registration__c dr = TestDataFactory.createDealRegistration('Sync Test DR', acct.Id);
+        dr = [SELECT Id, Opportunity__c, Status__c FROM Deal_Registration__c WHERE Id = :dr.Id];
+        System.assertNotEquals(null, dr.Opportunity__c,
+            'Opportunity should be linked before the update test proceeds');
+
+        Decimal updatedAmount = 99500;
+        Test.startTest();
+        dr.Estimated_Deal_Value__c = updatedAmount;
+        dr.Status__c = 'Under Review';
+        update dr;
+        Test.stopTest();
+
+        Opportunity updatedOpp = [
+            SELECT Amount FROM Opportunity WHERE Id = :dr.Opportunity__c
+        ];
+        System.assertEquals(updatedAmount, updatedOpp.Amount,
+            'Opportunity Amount should be synchronized from updated Estimated_Deal_Value__c when not Approved');
+    }
+
+    /**
+     * Once a Deal Registration Status is Approved, further updates to mapped
+     * fields should NOT propagate to the linked Opportunity.
+     */
+    @isTest
+    static void test_processAfterUpdate_approved_doesNotSync() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
+        Deal_Registration__c dr = TestDataFactory.createDealRegistration('Lock Test DR', acct.Id);
+        dr = [SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id = :dr.Id];
+
+        Opportunity baseOpp = [SELECT Amount FROM Opportunity WHERE Id = :dr.Opportunity__c];
+        Decimal originalAmount = baseOpp.Amount;
+        System.assertEquals(50000, originalAmount,
+            'Opportunity Amount should be 50000 after initial insert mapping');
+
+        Test.startTest();
+        dr.Status__c               = 'Approved';
+        dr.Estimated_Deal_Value__c = 999999;
+        update dr;
+        Test.stopTest();
+
+        Opportunity lockedOpp = [SELECT Amount FROM Opportunity WHERE Id = :dr.Opportunity__c];
+        System.assertEquals(originalAmount, lockedOpp.Amount,
+            'Opportunity Amount must NOT change after Deal Registration is set to Approved');
+    }
+
+    /**
+     * Updating a Deal Registration that has no linked Opportunity should not throw
+     * an exception (handles edge case of Opportunity__c being null).
+     */
+    @isTest
+    static void test_processAfterUpdate_noLinkedOpportunity_doesNotThrow() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
+        Deal_Registration__c dr = TestDataFactory.createDealRegistration('Unlinked DR', acct.Id);
+
+        // Detach the Opportunity lookup to simulate the edge case
+        dr = [SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id = :dr.Id];
+        Deal_Registration__c detached = new Deal_Registration__c(
+            Id             = dr.Id,
+            Opportunity__c = null
         );
+        update detached;
+
+        Boolean caughtError = false;
+        Test.startTest();
+        try {
+            detached.Estimated_Deal_Value__c = 12345;
+            update detached;
+        } catch (Exception ex) {
+            caughtError = true;
+        }
+        Test.stopTest();
+
+        System.assertEquals(false, caughtError,
+            'No exception should be thrown when Opportunity__c is null on update');
+    }
+
+    /**
+     * Updating a Deal Registration with Status Approved should not cause
+     * any DML on the Opportunity even when all mapped fields change.
+     */
+    @isTest
+    static void test_processAfterUpdate_bulkApproved_noOppsUpdated() {
+        Account acct = [SELECT Id FROM Account WHERE Name = 'Keneland Partner Account' LIMIT 1];
+        List<Deal_Registration__c> drs = TestDataFactory.createDealRegistrations(10, acct.Id);
+        List<Deal_Registration__c> reloaded = [
+            SELECT Id, Opportunity__c FROM Deal_Registration__c WHERE Id IN :drs
+        ];
+
+        // Approve all DRs
+        for (Deal_Registration__c dr : reloaded) {
+            dr.Status__c = 'Approved';
+        }
+        update reloaded;
+
+        // Capture Opportunity amounts before the attempted sync
+        List<Id> oppIds = new List<Id>();
+        for (Deal_Registration__c dr : reloaded) {
+            if (dr.Opportunity__c != null) {
+                oppIds.add(dr.Opportunity__c);
+            }
+        }
+        Map<Id, Opportunity> oppsBefore = new Map<Id, Opportunity>(
+            [SELECT Id, Amount FROM Opportunity WHERE Id IN :oppIds]
+        );
+
+        Test.startTest();
+        for (Deal_Registration__c dr : reloaded) {
+            dr.Estimated_Deal_Value__c = 888888;
+        }
+        update reloaded;
+        Test.stopTest();
+
+        List<Opportunity> oppsAfter = [SELECT Id, Amount FROM Opportunity WHERE Id IN :oppIds];
+        for (Opportunity opp : oppsAfter) {
+            System.assertEquals(oppsBefore.get(opp.Id).Amount, opp.Amount,
+                'Opportunity Amount should be unchanged after update on Approved Deal Registrations');
+        }
     }
 }

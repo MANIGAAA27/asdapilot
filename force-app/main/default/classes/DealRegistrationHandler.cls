@@ -1,254 +1,224 @@
 /**
  * @file              DealRegistrationHandler.cls
- * @description       Handler class for DealRegistrationTrigger. Orchestrates
- *                    Opportunity creation on Deal Registration insert, establishes
- *                    bi-directional ID linkage, and synchronizes mapped fields on
- *                    update until Deal Registration status reaches Approved.
- *                    Field mappings are driven by Deal_Field_Mapping__mdt records,
- *                    enabling configuration without code changes.
+ * @description       Handler class encapsulating core logic for processing Deal
+ *                    Registration records and synchronizing corresponding
+ *                    Opportunity records. Implements the single-trigger,
+ *                    handler-class pattern for DealRegistrationTrigger.
  * @author            ASDA Dev Agent (Claude Code)
- * @created           2026-05-29
- * @lastModified      2026-05-29
+ * @created           2026-05-30
+ * @lastModified      2026-05-30
  * @group             PartnerRegistrationAutomation
  *
- * @dependencies      Deal_Field_Mapping__mdt (Custom Metadata Type),
- *                    Deal_Registration__c (Custom Object),
- *                    Opportunity (Standard Object)
+ * @dependencies      Deal_Registration_Field_Mapping__mdt (Custom Metadata Type)
  * @calledBy          DealRegistrationTrigger
  * @testClass         DealRegistrationHandlerTest
  *
- * @see               LLD - Partner Registration Automation (May 28, 2026)
+ * @see               LLD - Sr Developer creates combined technical design (draft)
+ */
+
+/**
+ * Handler for Deal Registration trigger events.
+ *
+ * Responsibilities:
+ *   - Create Opportunity records from new Deal Registration records.
+ *   - Establish bi-directional lookup links between Deal Registration and Opportunity.
+ *   - Synchronize mapped fields from Deal Registration to Opportunity on updates
+ *     (ceases once Deal Registration Status equals Approved).
+ *   - Retrieve active field mappings dynamically from Deal_Registration_Field_Mapping__mdt.
+ *
+ * Threading: uses a static recursion guard (isRunning) to prevent infinite loops
+ * caused by the internal DML update on Deal_Registration__c that sets Opportunity__c.
+ *
+ * @testClass DealRegistrationHandlerTest
  */
 public with sharing class DealRegistrationHandler {
 
-    /**
-     * Handler for Deal Registration triggers.
-     *
-     * Responsibilities:
-     *   - Create one Opportunity per inserted Deal Registration.
-     *   - Populate Opportunity fields via CMT-driven dynamic field mappings.
-     *   - Set Opportunity.Deal_Registration__c and Deal_Registration__c.Opportunity__c.
-     *   - On update, re-sync mapped fields unless status is Approved.
-     *   - Guard against recursive trigger execution with a static flag.
-     *
-     * Threading: static isRunning flag prevents recursion within a single
-     * transaction. Not safe for use across @future or Queueable boundaries
-     * where static state resets.
-     *
-     * @testClass DealRegistrationHandlerTest
-     */
+    private static final String APPROVED_STATUS = 'Approved';
+    private static final String DEFAULT_STAGE   = 'Qualification';
 
-    // ─── Constants ────────────────────────────────────────────────────────────
-
-    private static final String APPROVED_STATUS     = 'Approved';
-    private static final String DEFAULT_OPP_STAGE   = 'Qualification';
-    private static final Integer DEFAULT_CLOSE_DAYS = 90;
-
-    // ─── Recursion guard ──────────────────────────────────────────────────────
-
-    /** Prevents re-entrant trigger execution (e.g. when updating DR to set Opportunity__c). */
+    /** Recursion guard — prevents re-entry when the handler updates Deal_Registration__c internally. */
     @TestVisible
     private static Boolean isRunning = false;
 
-    // ─── Test seam ────────────────────────────────────────────────────────────
-
     /**
-     * Inject in-memory CMT records in unit tests to avoid a live SOQL
-     * against the org's metadata store. Leave null in all production paths.
+     * Handles after-insert events. Creates a linked Opportunity for each new
+     * Deal Registration and establishes bi-directional lookup fields on both
+     * the Opportunity (Deal_Registration__c) and the Deal Registration (Opportunity__c).
+     *
+     * @param dealRegistrations  Trigger.new list of newly inserted Deal Registrations.
+     *
+     * @calledBy  DealRegistrationTrigger
+     * @testMethods test_processAfterInsert_singleRecord_createsLinkedOpportunity,
+     *              test_processAfterInsert_bulk_createsOpportunitiesForAllRecords
      */
-    @TestVisible
-    private static List<Deal_Field_Mapping__mdt> testMappingOverride = null;
-
-    // ─── Inner exception ──────────────────────────────────────────────────────
-
-    /** Thrown when DML or validation fails inside this handler. */
-    public class DealRegistrationHandlerException extends Exception {}
-
-    // ─── Public API ───────────────────────────────────────────────────────────
-
-    /**
-     * Creates an Opportunity for every newly inserted Deal Registration, applies
-     * CMT field mappings, then writes back the Opportunity ID to the Deal
-     * Registration and the Deal Registration ID to the Opportunity.
-     *
-     * Bulk-safe: processes all records in a single set of DML statements.
-     * No SOQL or DML inside loops.
-     *
-     * @param dealRegistrations  Immutable Trigger.new list of inserted Deal Registration records.
-     *
-     * @calledBy DealRegistrationTrigger (after insert)
-     * @testMethods test_afterInsert_createsLinkedOpportunity,
-     *              test_afterInsert_mapsFieldsFromCMT,
-     *              test_bulkInsert_200Records
-     */
-    public static void processAfterInsert(List<Deal_Registration__c> dealRegistrations) {
+    public void processAfterInsert(List<Deal_Registration__c> dealRegistrations) {
         if (isRunning) {
             return;
         }
         isRunning = true;
         try {
-            List<Deal_Field_Mapping__mdt> mappings = getActiveMappings();
-
-            // Build Opportunities — keep a parallel list so we can map back by index
-            List<Opportunity> oppsToInsert = new List<Opportunity>();
-
-            for (Deal_Registration__c dr : dealRegistrations) {
-                Opportunity opp = new Opportunity();
-                opp.Name       = String.isNotBlank(dr.Name) ? dr.Name : 'Deal Registration';
-                opp.StageName  = DEFAULT_OPP_STAGE;
-                opp.CloseDate  = Date.today().addDays(DEFAULT_CLOSE_DAYS);
-                opp.Deal_Registration__c = dr.Id;
-
-                // Apply dynamic field mappings from Custom Metadata
-                for (Deal_Field_Mapping__mdt mapping : mappings) {
-                    Object fieldValue = dr.get(mapping.Source_Field_API_Name__c);
-                    if (fieldValue != null) {
-                        opp.put(mapping.Target_Field_API_Name__c, fieldValue);
-                    }
-                }
-
-                oppsToInsert.add(opp);
-            }
-
-            if (oppsToInsert.isEmpty()) {
+            List<Deal_Registration_Field_Mapping__mdt> mappings = getActiveMappings();
+            if (mappings.isEmpty()) {
                 return;
             }
 
-            try {
-                insert oppsToInsert;
-            } catch (DmlException ex) {
-                System.debug(
-                    LoggingLevel.ERROR,
-                    'DealRegistrationHandler.processAfterInsert — Opportunity insert failed: '
-                        + ex.getMessage()
-                );
-                throw new DealRegistrationHandlerException(
-                    'Failed to create Opportunity: ' + ex.getMessage(), ex
-                );
+            List<Opportunity> oppsToInsert = new List<Opportunity>();
+            for (Deal_Registration__c dr : dealRegistrations) {
+                oppsToInsert.add(buildOpportunity(dr, mappings));
             }
 
-            // Write the new Opportunity ID back to each Deal Registration
-            List<Deal_Registration__c> drsToLink = new List<Deal_Registration__c>();
+            insert oppsToInsert;
+
+            // Establish bi-directional links after Opportunity Ids are generated
+            List<Opportunity> oppsToUpdate = new List<Opportunity>();
+            List<Deal_Registration__c> drsToUpdate = new List<Deal_Registration__c>();
             for (Integer i = 0; i < dealRegistrations.size(); i++) {
-                drsToLink.add(new Deal_Registration__c(
-                    Id             = dealRegistrations[i].Id,
+                oppsToInsert[i].Deal_Registration__c = dealRegistrations[i].Id;
+                oppsToUpdate.add(oppsToInsert[i]);
+                drsToUpdate.add(new Deal_Registration__c(
+                    Id = dealRegistrations[i].Id,
                     Opportunity__c = oppsToInsert[i].Id
                 ));
             }
+            update oppsToUpdate;
+            update drsToUpdate;
 
-            try {
-                update drsToLink;
-            } catch (DmlException ex) {
-                System.debug(
-                    LoggingLevel.ERROR,
-                    'DealRegistrationHandler.processAfterInsert — DR linkage update failed: '
-                        + ex.getMessage()
-                );
-                throw new DealRegistrationHandlerException(
-                    'Failed to link Deal Registration to Opportunity: ' + ex.getMessage(), ex
-                );
+        } catch (DmlException ex) {
+            System.debug(LoggingLevel.ERROR,
+                'DealRegistrationHandler.processAfterInsert DML error: ' + ex.getMessage());
+            for (Deal_Registration__c dr : dealRegistrations) {
+                dr.addError('Failed to create linked Opportunity: ' + ex.getMessage());
             }
-
         } finally {
             isRunning = false;
         }
     }
 
     /**
-     * Synchronizes mapped fields from updated Deal Registration records to their
-     * linked Opportunities. Skips synchronization when:
-     *   - The record has already been processed in this transaction (isRunning).
-     *   - The Deal Registration status is Approved.
-     *   - No linked Opportunity exists.
-     *   - No CMT-mapped source field has changed.
+     * Handles after-update events. Synchronizes mapped fields from Deal Registration
+     * to the linked Opportunity, provided Status is not Approved. If the Status is
+     * Approved, synchronization ceases permanently for that record.
      *
-     * Bulk-safe: collects all Opportunity updates and applies them in a single DML.
+     * @param newRecords  Trigger.new list of updated Deal Registrations.
+     * @param oldMap      Trigger.oldMap keyed by Deal Registration Id.
      *
-     * @param dealRegistrations  Immutable Trigger.new list of updated Deal Registration records.
-     * @param oldMap             Map of Deal Registration ID to pre-update record state.
-     *
-     * @calledBy DealRegistrationTrigger (after update)
-     * @testMethods test_afterUpdate_syncsFieldsWhenNotApproved,
-     *              test_afterUpdate_stopsWhenApproved
+     * @calledBy  DealRegistrationTrigger
+     * @testMethods test_processAfterUpdate_notApproved_syncsFields,
+     *              test_processAfterUpdate_approved_doesNotSync
      */
-    public static void processAfterUpdate(
-        List<Deal_Registration__c> dealRegistrations,
-        Map<Id, Deal_Registration__c> oldMap
-    ) {
+    public void processAfterUpdate(List<Deal_Registration__c> newRecords,
+                                   Map<Id, Deal_Registration__c> oldMap) {
         if (isRunning) {
             return;
         }
-
-        List<Deal_Field_Mapping__mdt> mappings = getActiveMappings();
-        if (mappings.isEmpty()) {
-            return;
-        }
-
-        List<Opportunity> oppsToUpdate = new List<Opportunity>();
-
-        for (Deal_Registration__c dr : dealRegistrations) {
-            // Skip if approved or no linked Opportunity
-            if (dr.Status__c == APPROVED_STATUS || dr.Opportunity__c == null) {
-                continue;
+        isRunning = true;
+        try {
+            List<Deal_Registration_Field_Mapping__mdt> mappings = getActiveMappings();
+            if (mappings.isEmpty()) {
+                return;
             }
 
-            // Only sync when at least one mapped source field has changed
-            Deal_Registration__c oldDr = oldMap.get(dr.Id);
-            Boolean hasChanges = false;
-            for (Deal_Field_Mapping__mdt mapping : mappings) {
-                if (dr.get(mapping.Source_Field_API_Name__c)
-                        != oldDr.get(mapping.Source_Field_API_Name__c)) {
-                    hasChanges = true;
-                    break;
+            Set<Id> oppIds = new Set<Id>();
+            for (Deal_Registration__c dr : newRecords) {
+                if (dr.Opportunity__c != null && dr.Status__c != APPROVED_STATUS) {
+                    oppIds.add(dr.Opportunity__c);
                 }
             }
 
-            if (!hasChanges) {
-                continue;
+            if (oppIds.isEmpty()) {
+                return;
             }
 
-            // Build the Opportunity update record using dynamic field mappings
-            Opportunity opp = new Opportunity(Id = dr.Opportunity__c);
-            for (Deal_Field_Mapping__mdt mapping : mappings) {
-                opp.put(
-                    mapping.Target_Field_API_Name__c,
-                    dr.get(mapping.Source_Field_API_Name__c)
-                );
-            }
-            oppsToUpdate.add(opp);
-        }
+            Map<Id, Opportunity> oppMap = new Map<Id, Opportunity>(
+                [SELECT Id, Name, AccountId, Amount, CloseDate, Description,
+                        Primary_Contact__c
+                 FROM Opportunity
+                 WHERE Id IN :oppIds
+                 WITH SECURITY_ENFORCED]
+            );
 
-        if (!oppsToUpdate.isEmpty()) {
-            try {
+            List<Opportunity> oppsToUpdate = new List<Opportunity>();
+            Set<Id> processedOppIds = new Set<Id>();
+            for (Deal_Registration__c dr : newRecords) {
+                if (dr.Opportunity__c == null || dr.Status__c == APPROVED_STATUS) {
+                    continue;
+                }
+                if (processedOppIds.contains(dr.Opportunity__c)) {
+                    continue;
+                }
+                Opportunity opp = oppMap.get(dr.Opportunity__c);
+                if (opp == null) {
+                    continue;
+                }
+                applyMappings(dr, opp, mappings);
+                oppsToUpdate.add(opp);
+                processedOppIds.add(dr.Opportunity__c);
+            }
+
+            if (!oppsToUpdate.isEmpty()) {
                 update oppsToUpdate;
-            } catch (DmlException ex) {
-                System.debug(
-                    LoggingLevel.ERROR,
-                    'DealRegistrationHandler.processAfterUpdate — Opportunity sync failed: '
-                        + ex.getMessage()
-                );
-                throw new DealRegistrationHandlerException(
-                    'Failed to synchronize Opportunity fields: ' + ex.getMessage(), ex
-                );
             }
+
+        } catch (DmlException ex) {
+            System.debug(LoggingLevel.ERROR,
+                'DealRegistrationHandler.processAfterUpdate DML error: ' + ex.getMessage());
+            for (Deal_Registration__c dr : newRecords) {
+                dr.addError('Failed to synchronize linked Opportunity: ' + ex.getMessage());
+            }
+        } finally {
+            isRunning = false;
         }
     }
 
-    // ─── Private helpers ──────────────────────────────────────────────────────
+    /**
+     * Queries all active field mapping records from the Custom Metadata Type.
+     * CMT records are always accessible regardless of running-user FLS.
+     *
+     * @return List of active Deal_Registration_Field_Mapping__mdt records.
+     */
+    private List<Deal_Registration_Field_Mapping__mdt> getActiveMappings() {
+        return [
+            SELECT Id, Source_Field_API_Name__c, Target_Field_API_Name__c
+            FROM Deal_Registration_Field_Mapping__mdt
+            WHERE Is_Active__c = true
+        ];
+    }
 
     /**
-     * Returns active field mapping metadata records.
-     * In test context returns testMappingOverride to allow isolated unit tests
-     * without requiring live CMT records in the org.
+     * Constructs a new Opportunity with default required-field values, then
+     * overlays the metadata-driven field mappings from the source Deal Registration.
+     *
+     * @param dr        Source Deal Registration record.
+     * @param mappings  Active field-mapping configuration records.
+     * @return          Unsaved Opportunity ready for insert.
      */
-    private static List<Deal_Field_Mapping__mdt> getActiveMappings() {
-        if (testMappingOverride != null) {
-            return testMappingOverride;
+    private Opportunity buildOpportunity(Deal_Registration__c dr,
+                                          List<Deal_Registration_Field_Mapping__mdt> mappings) {
+        Opportunity opp = new Opportunity();
+        opp.Name      = dr.Name + ' - Opportunity';
+        opp.StageName = DEFAULT_STAGE;
+        opp.CloseDate = Date.today().addDays(90);
+        applyMappings(dr, opp, mappings);
+        return opp;
+    }
+
+    /**
+     * Dynamically copies non-null field values from a Deal Registration to an
+     * Opportunity using the active metadata-driven mapping configuration.
+     * Uses SObject.get() / SObject.put() for configuration-driven field access
+     * without code changes when mappings are added or modified.
+     *
+     * @param dr        Source Deal Registration record (fully populated from trigger).
+     * @param opp       Target Opportunity record to update in memory.
+     * @param mappings  Active field-mapping configuration records.
+     */
+    private void applyMappings(Deal_Registration__c dr, Opportunity opp,
+                                List<Deal_Registration_Field_Mapping__mdt> mappings) {
+        for (Deal_Registration_Field_Mapping__mdt mapping : mappings) {
+            Object fieldValue = dr.get(mapping.Source_Field_API_Name__c);
+            if (fieldValue != null) {
+                opp.put(mapping.Target_Field_API_Name__c, fieldValue);
+            }
         }
-        return [
-            SELECT Source_Field_API_Name__c, Target_Field_API_Name__c
-            FROM   Deal_Field_Mapping__mdt
-            WHERE  Is_Active__c = true
-        ];
     }
 }

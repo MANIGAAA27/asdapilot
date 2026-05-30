@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Projected_Close_Date__c</fullName>
     <label>Projected Close Date</label>
-    <description>Partner-estimated close date for the deal. Maps to Opportunity CloseDate.</description>
+    <description>Anticipated close date for the deal. Maps to Opportunity CloseDate.</description>
     <type>Date</type>
     <required>false</required>
 </CustomField>

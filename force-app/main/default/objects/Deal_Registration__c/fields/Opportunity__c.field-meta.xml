@@ -2,7 +2,7 @@
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
     <fullName>Opportunity__c</fullName>
     <label>Opportunity</label>
-    <description>Lookup to the Opportunity automatically created from this Deal Registration.</description>
+    <description>Bi-directional lookup to the Opportunity created from this Deal Registration.</description>
     <type>Lookup</type>
     <referenceTo>Opportunity</referenceTo>
     <relationshipLabel>Deal Registrations</relationshipLabel>
