@@ -1,0 +1,12 @@
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>CaseTransfer_ErrorMessages</fullName>
+        <value>All required fields must be completed.</value>
+        <protected>false</protected>
+    </labels>
+    <labels>
+        <fullName>CaseTransfer_SuccessMessages</fullName>
+        <value>Case transfer completed successfully.</value>
+        <protected>false</protected>
+    </labels>
+</CustomLabels>
