@@ -1,0 +1,20 @@
+<template>
+    <lightning-record-form
+        object-api-name="Case"
+        record-id={recordId}
+        layout-type="Compact"
+        columns="2">
+        <lightning-file-upload label="Attach Log File" name="fileUploader"
+            accept=".log,.txt,.zip" record-id={recordId}
+            onuploadfinished={handleUploadFinished}></lightning-file-upload>
+        <lightning-combobox label="Reproduction Steps"
+            value={reproductionSteps}
+            placeholder="Select a step"
+            options={reproductionStepOptions}
+            onchange={handleReproductionStepChange}></lightning-combobox>
+        <lightning-textarea label="Troubleshooting Steps Taken"
+            value={troubleshootingSteps}
+            minlength="20" required
+            onchange={handleTroubleshootingChange}></lightning-textarea>
+    </lightning-record-form>
+</template>
