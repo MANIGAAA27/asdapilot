@@ -1,0 +1,19 @@
+<template>
+    <lightning-card title="Case Transfer to Engineering">
+        <lightning-button label="Submit" onclick={handleSubmit}></lightning-button>
+        <lightning-file-upload label="Log File Attachment" 
+                                name="logFiles" 
+                                onuploadfinished={handleUploadFinished} 
+                                multiple>
+        </lightning-file-upload>
+        <lightning-input type="text" label="Troubleshooting Steps Taken" 
+                         value={troubleshootingSteps}
+                         onchange={handleInputChange} required></lightning-input>
+        <lightning-combobox label="Reproduction Steps" 
+                             options={reproductionStepsOptions} 
+                             value={selectedReproductionSteps} 
+                             onchange={handleReproductionStepsChange} 
+                             multiple required>
+        </lightning-combobox>
+    </lightning-card>
+</template>

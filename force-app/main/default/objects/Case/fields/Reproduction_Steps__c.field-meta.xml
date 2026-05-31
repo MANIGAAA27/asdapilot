@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reproduction_Steps__c</fullName>
+    <label>Reproduction Steps</label>
+    <type>MultiselectPicklist</type>
+    <picklist>
+        <picklistValues>
+            <fullName>step1</fullName>
+            <default>false</default>
+            <label>Step 1</label>
+        </picklistValues>
+        <picklistValues>
+            <fullName>step2</fullName>
+            <default>false</default>
+            <label>Step 2</label>
+        </picklistValues>
+        <picklistValues>
+            <fullName>step3</fullName>
+            <default>false</default>
+            <label>Step 3</label>
+        </picklistValues>
+    </picklist>
+    <visibleLines>4</visibleLines>
+</CustomField>

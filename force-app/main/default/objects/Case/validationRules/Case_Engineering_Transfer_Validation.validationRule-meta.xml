@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Case_Engineering_Transfer_Validation</fullName>
+    <active>true</active>
+    <description>Ensures required fields are populated when transferring to Engineering queue</description>
+    <errorConditionFormula>AND(
+        ISCHANGED(OwnerId),
+        Owner:Group.DeveloperName = 'Engineering',
+        OR(
+            ISBLANK(TEXT(Reproduction_Steps__c)),
+            ISBLANK(Troubleshooting_Steps_Taken__c),
+            LEN(Troubleshooting_Steps_Taken__c) &lt; 20
+        )
+    )</errorConditionFormula>
+    <errorMessage>Cases transferred to Engineering must include reproduction steps and detailed troubleshooting documentation (minimum 20 characters).</errorMessage>
+</ValidationRule>
