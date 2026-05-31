@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <excludeButtons>Submit</excludeButtons>
+    <layoutSections>
+        <displayLines>1</displayLines>
+        <tabOrder>TopToBottom</tabOrder>
+        <layoutColumns>
+            <fieldItems>
+                <field>Troubleshooting_Steps_Taken__c</field>
+                <behavior>Edit</behavior>
+                <displayLines>4</displayLines>
+            </fieldItems>
+            <fieldItems>
+                <field>Reproduction_Steps__c</field>
+                <behavior>Edit</behavior>
+            </fieldItems>
+        </layoutColumns>
+    </layoutSections>
+</Layout>

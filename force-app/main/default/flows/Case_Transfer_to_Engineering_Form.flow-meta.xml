@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <status>Draft</status>
+    <startElementReference>Start</startElementReference>
+    <elements>
+        <FlowScreen fieldName="Case_Transfer_Form" label="Case Transfer Form">
+            <fields>
+                <FlowField type="String" name="TroubleshootingSteps__c" label="Troubleshooting Steps"></FlowField>
+                <FlowField type="Dropdown" name="ReproductionSteps__c" label="Reproduction Steps"></FlowField>
+            </fields>
+        </FlowScreen>
+    </elements>
+</Flow>

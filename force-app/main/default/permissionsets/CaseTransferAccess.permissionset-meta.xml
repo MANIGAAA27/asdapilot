@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Case Transfer Access</label>
+    <fieldPermissions>
+        <field>Case.Reproduction_Steps__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case.Troubleshooting_Steps_Taken__c</field>
+        <editable>true</editable>
+        <readable>true</readable>
+    </fieldPermissions>
+    <classAccesses>
+        <apexClass>CaseTransferService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+</PermissionSet>

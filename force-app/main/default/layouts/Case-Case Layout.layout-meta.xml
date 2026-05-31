@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Layout xmlns="http://soap.sforce.com/2006/04/metadata">
+    <header>
+        <displayMode>edit</displayMode>
+    </header>
+    <sections>
+        <fullName>New Section</fullName>
+        <columns>2</columns>
+        <fieldItems>
+            <field>Reproduction_Steps__c</field>
+            <field>Troubleshooting_Steps_Taken__c</field>
+        </fieldItems>
+    </sections>
+</Layout>
