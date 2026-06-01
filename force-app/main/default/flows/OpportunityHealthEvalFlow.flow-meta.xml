@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Opportunity Health Eval Flow</label>
+    <description>Scheduled and record-triggered flow for stagnant opportunity detection and manager alerts.</description>
+    <interviewLabel>OpportunityHealthEvalFlow</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+</Flow>
