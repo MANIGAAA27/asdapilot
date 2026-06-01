@@ -1,0 +1,11 @@
+<template>
+    <article class="slds-box slds-box_x-small slds-m-bottom_x-small">
+        <div class="slds-text-heading_small">{recommendation.type}</div>
+        <div class="slds-m-vertical_x-small">{recommendation.text}</div>
+        <div class="slds-button-group" role="group">
+            <lightning-button label="Viewed" data-type="Viewed" onclick={notifyInteraction}></lightning-button>
+            <lightning-button label="Updated" data-type="Updated" onclick={notifyInteraction}></lightning-button>
+            <lightning-button label="Ignored" data-type="Ignored" onclick={notifyInteraction}></lightning-button>
+        </div>
+    </article>
+</template>
