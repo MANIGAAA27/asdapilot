@@ -1,0 +1,11 @@
+<template>
+    <article class="slds-box slds-theme_default">
+        <div class="slds-text-heading_small slds-m-bottom_x-small">{recommendationTitle}</div>
+        <div class="slds-text-body_small slds-m-bottom_small">{recommendationSummary}</div>
+        <div class="slds-button-group" role="group">
+            <lightning-button label="Viewed" variant="neutral" data-action="Viewed" onclick={handleClick}></lightning-button>
+            <lightning-button label="Updated" variant="brand" data-action="Updated" onclick={handleClick}></lightning-button>
+            <lightning-button label="Ignored" variant="destructive" data-action="Ignored" onclick={handleClick}></lightning-button>
+        </div>
+    </article>
+</template>

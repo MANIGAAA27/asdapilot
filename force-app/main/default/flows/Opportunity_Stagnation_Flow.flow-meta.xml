@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Opportunity Stagnation Flow</label>
+    <description>Weekly scheduled flow to flag opportunities without activity for 14 days.</description>
+    <interviewLabel>Opportunity_Stagnation_Flow</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+</Flow>

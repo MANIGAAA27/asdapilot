@@ -1,0 +1,21 @@
+<template>
+    <lightning-card title="Auto Coach" icon-name="utility:approval">
+        <template if:true={hasRecommendations}>
+            <div class="slds-p-around_small">
+                <template for:each={recommendations} for:item="item">
+                    <div key={item.id} class="slds-m-bottom_small">
+                        <c-coach-interaction-l-c-w
+                            recommendation={item}
+                            onloginteraction={handleLogInteraction}>
+                        </c-coach-interaction-l-c-w>
+                    </div>
+                </template>
+            </div>
+        </template>
+        <template if:false={hasRecommendations}>
+            <div class="slds-p-around_small slds-text-color_weak">
+                No coaching recommendations at this time.
+            </div>
+        </template>
+    </lightning-card>
+</template>
