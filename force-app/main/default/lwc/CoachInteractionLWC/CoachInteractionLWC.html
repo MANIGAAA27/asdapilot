@@ -1,0 +1,23 @@
+<template>
+    <lightning-card title="Coach Interaction">
+        <div class="slds-p-around_medium">
+            <div class="slds-text-body_regular slds-m-bottom_small">{recommendation}</div>
+            <lightning-combobox
+                name="interactionType"
+                label="Interaction Type"
+                value={interactionType}
+                options={interactionTypeOptions}
+                onchange={handleTypeChange}>
+            </lightning-combobox>
+            <lightning-textarea
+                class="slds-m-top_small"
+                label="Comments"
+                value={comments}
+                onchange={handleCommentsChange}>
+            </lightning-textarea>
+            <div class="slds-m-top_medium">
+                <lightning-button variant="brand" label="Log Interaction" onclick={handleLogInteraction}></lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>
