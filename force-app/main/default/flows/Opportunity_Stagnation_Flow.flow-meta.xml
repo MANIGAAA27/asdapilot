@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Opportunity Stagnation Flow</label>
+    <description>Scheduled flow that runs weekly to identify Opportunities with no activity in the last 14 days and flags them as stagnant.</description>
+    <interviewLabel>Opportunity Stagnation Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>GetStagnantOpportunities</targetReference>
+        </connector>
+    </start>
+
+    <recordLookups>
+        <name>GetStagnantOpportunities</name>
+        <label>Get Stagnant Opportunities</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <connector>
+            <targetReference>EvaluateStagnation</targetReference>
+        </connector>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>LastActivityDate</field>
+            <operator>LessThan</operator>
+            <value>
+                <elementReference>cutoffDate</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>false</getFirstRecordOnly>
+        <object>Opportunity</object>
+        <outputReference>stagnantOpportunities</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>Name</queriedFields>
+        <queriedFields>OwnerId</queriedFields>
+        <queriedFields>Description</queriedFields>
+    </recordLookups>
+
+    <decisions>
+        <name>EvaluateStagnation</name>
+        <label>Evaluate Stagnation</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <defaultConnector>
+            <targetReference>EndFlow</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Stagnant Opportunities</defaultConnectorLabel>
+        <rules>
+            <name>HasStagnantOpportunities</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>stagnantOpportunities</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>LoopStagnantOpportunities</targetReference>
+            </connector>
+            <label>Has Stagnant Opportunities</label>
+        </rules>
+    </decisions>
+
+    <loops>
+        <name>LoopStagnantOpportunities</name>
+        <label>Loop Stagnant Opportunities</label>
+        <locationX>448</locationX>
+        <locationY>380</locationY>
+        <collectionReference>stagnantOpportunities</collectionReference>
+        <iterationOrder>Asc</iterationOrder>
+        <nextValueConnector>
+            <targetReference>FlagStagnantOpportunity</targetReference>
+        </nextValueConnector>
+        <noMoreValuesConnector>
+            <targetReference>EndFlow</targetReference>
+        </noMoreValuesConnector>
+    </loops>
+
+    <recordUpdates>
+        <name>FlagStagnantOpportunity</name>
+        <label>Flag Stagnant Opportunity</label>
+        <locationX>584</locationX>
+        <locationY>510</locationY>
+        <connector>
+            <targetReference>LoopStagnantOpportunities</targetReference>
+        </connector>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>LoopStagnantOpportunities</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <stringValue>STAGNANT: No activity recorded in the last 14 days. Please update the opportunity or log a next step.</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
+
+    <assignments>
+        <name>EndFlow</name>
+        <label>End Flow</label>
+        <locationX>720</locationX>
+        <locationY>640</locationY>
+        <assignmentItems>
+            <assignToReference>flowCompleted</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <variables>
+        <name>stagnantOpportunities</name>
+        <dataType>SObject</dataType>
+        <objectType>Opportunity</objectType>
+        <isCollection>true</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <variables>
+        <name>cutoffDate</name>
+        <dataType>Date</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <elementReference>$Flow.CurrentDate</elementReference>
+        </value>
+    </variables>
+
+    <variables>
+        <name>flowCompleted</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </variables>
+</Flow>

@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Contact Role Evaluation Flow</label>
+    <description>Record-triggered flow that fires on Opportunity updates to verify that at least one contact role is associated with the Opportunity.</description>
+    <interviewLabel>Contact Role Evaluation Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+    <triggerType>RecordAfterSave</triggerType>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>Opportunity</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>LookupContactRoles</targetReference>
+        </connector>
+    </start>
+
+    <recordLookups>
+        <name>LookupContactRoles</name>
+        <label>Lookup Contact Roles</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <connector>
+            <targetReference>EvaluateContactRoles</targetReference>
+        </connector>
+        <filters>
+            <field>OpportunityId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>OpportunityContactRole</object>
+        <outputReference>firstContactRole</outputReference>
+        <queriedFields>Id</queriedFields>
+    </recordLookups>
+
+    <decisions>
+        <name>EvaluateContactRoles</name>
+        <label>Evaluate Contact Roles</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <defaultConnector>
+            <targetReference>FlagMissingContactRole</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Contact Role</defaultConnectorLabel>
+        <rules>
+            <name>HasContactRole</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>firstContactRole</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>EndFlow</targetReference>
+            </connector>
+            <label>Has Contact Role</label>
+        </rules>
+    </decisions>
+
+    <recordUpdates>
+        <name>FlagMissingContactRole</name>
+        <label>Flag Missing Contact Role</label>
+        <locationX>448</locationX>
+        <locationY>380</locationY>
+        <connector>
+            <targetReference>EndFlow</targetReference>
+        </connector>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Description</field>
+            <value>
+                <stringValue>ACTION REQUIRED: No contact role assigned to this Opportunity. Please add a key decision-maker as a Contact Role.</stringValue>
+            </value>
+        </inputAssignments>
+        <object>Opportunity</object>
+    </recordUpdates>
+
+    <assignments>
+        <name>EndFlow</name>
+        <label>End Flow</label>
+        <locationX>584</locationX>
+        <locationY>510</locationY>
+        <assignmentItems>
+            <assignToReference>flowCompleted</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <variables>
+        <name>firstContactRole</name>
+        <dataType>SObject</dataType>
+        <objectType>OpportunityContactRole</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <variables>
+        <name>flowCompleted</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+        <value>
+            <booleanValue>false</booleanValue>
+        </value>
+    </variables>
+</Flow>
