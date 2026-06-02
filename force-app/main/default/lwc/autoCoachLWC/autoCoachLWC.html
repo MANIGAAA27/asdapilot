@@ -1,0 +1,14 @@
+<template>
+    <lightning-card title="Auto Coach">
+        <div class="slds-p-around_small">
+            <template if:true={hasRecommendations}>
+                <template for:each={recommendations} for:item="item">
+                    <c-coach-interaction-lwc key={item.id} recommendation={item} oninteraction={handleInteraction}></c-coach-interaction-lwc>
+                </template>
+            </template>
+            <template if:true={showEmptyState}>
+                <div class="slds-text-color_weak">No coaching recommendations available.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

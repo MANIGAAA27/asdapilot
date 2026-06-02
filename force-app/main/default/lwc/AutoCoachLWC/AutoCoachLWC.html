@@ -1,0 +1,20 @@
+<template>
+    <lightning-card title="Auto Coach">
+        <div class="slds-p-around_medium">
+            <template if:true={hasInsights}>
+                <template for:each={insights} for:item="item">
+                    <c-coach-interaction-l-w-c
+                        key={item.key}
+                        recommendation={item.recommendation}
+                        status={item.status}
+                        opportunity-id={recordId}
+                        oninteractionlogged={handleInteractionLogged}>
+                    </c-coach-interaction-l-w-c>
+                </template>
+            </template>
+            <template if:false={hasInsights}>
+                <div class="slds-text-color_weak">No active coaching recommendations.</div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
