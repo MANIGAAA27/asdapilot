@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Require_Engineering_Transfer_Completion</fullName>
+    <active>true</active>
+    <description>Blocks direct reassignment to Engineering when transfer information has not been submitted.</description>
+    <errorConditionFormula>AND(
+ISCHANGED(OwnerId),
+Transfer_Submitted_To_Engineering__c = FALSE,
+NOT(
+ISBLANK(TEXT(OwnerId))
+)
+)</errorConditionFormula>
+    <errorDisplayField>OwnerId</errorDisplayField>
+    <errorMessage>Case transfer to Engineering is incomplete. Use the Case Transfer to Engineering process to complete the required handoff information before reassigning the Case.</errorMessage>
+</ValidationRule>

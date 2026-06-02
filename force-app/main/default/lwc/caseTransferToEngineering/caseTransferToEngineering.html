@@ -1,0 +1,69 @@
+<template>
+    <lightning-card title="Case Transfer to Engineering" icon-name="standard:case">
+        <div class="slds-p-around_medium">
+            <template if:true={errorBanner}>
+                <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <h2>{errorBanner}</h2>
+                </div>
+            </template>
+
+            <p class="slds-m-bottom_medium">
+                Complete all required information before transferring this Case to Engineering.
+            </p>
+
+            <lightning-file-upload
+                label="Attach Relevant Log Files"
+                name="logUploader"
+                record-id={recordId}
+                accept={acceptedFormats}
+                multiple
+                required
+                onuploadfinished={handleUploadFinished}>
+            </lightning-file-upload>
+
+            <template if:true={fileError}>
+                <div class="slds-text-color_error slds-m-top_x-small slds-m-bottom_medium">{fileError}</div>
+            </template>
+
+            <lightning-dual-listbox
+                name="reproSteps"
+                label="Reproduction Steps"
+                source-label="Available"
+                selected-label="Selected"
+                field-level-help="Select at least one applicable reproduction step."
+                options={reproductionOptions}
+                value={selectedReproductionSteps}
+                required
+                onchange={handleReproductionChange}>
+            </lightning-dual-listbox>
+
+            <template if:true={reproError}>
+                <div class="slds-text-color_error slds-m-top_x-small slds-m-bottom_medium">{reproError}</div>
+            </template>
+
+            <lightning-textarea
+                name="troubleshooting"
+                label="Troubleshooting Steps Already Taken"
+                value={troubleshootingSteps}
+                minlength="20"
+                maxlength="2000"
+                required
+                onchange={handleTroubleshootingChange}>
+            </lightning-textarea>
+
+            <template if:true={troubleshootingError}>
+                <div class="slds-text-color_error slds-m-top_x-small slds-m-bottom_medium">{troubleshootingError}</div>
+            </template>
+
+            <div class="slds-m-top_medium">
+                <lightning-button
+                    variant="brand"
+                    label="Submit Transfer"
+                    onclick={handleSubmit}
+                    disabled={isSubmitting}>
+                </lightning-button>
+            </div>
+        </div>
+    </lightning-card>
+</template>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Transferred_To_Engineering_By__c</fullName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <description>User who completed the transfer to Engineering.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Transferred To Engineering By</label>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Transferred Cases To Engineering</relationshipLabel>
+    <relationshipName>TransferredCasesToEngineering</relationshipName>
+    <trackHistory>true</trackHistory>
+    <type>Lookup</type>
+</CustomField>

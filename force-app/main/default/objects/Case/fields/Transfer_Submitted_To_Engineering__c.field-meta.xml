@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Transfer_Submitted_To_Engineering__c</fullName>
+    <defaultValue>false</defaultValue>
+    <description>Indicates whether the required Engineering transfer information has been submitted.</description>
+    <externalId>false</externalId>
+    <fieldManageability>DeveloperControlled</fieldManageability>
+    <label>Transfer Submitted To Engineering</label>
+    <trackHistory>true</trackHistory>
+    <type>Checkbox</type>
+</CustomField>
