@@ -1,0 +1,41 @@
+<template>
+    <lightning-card title="Coaching Recommendations" icon-name="standard:coaching">
+        <div class="slds-card__body slds-card__body_inner">
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading" size="small"></lightning-spinner>
+            </template>
+            <template if:false={isLoading}>
+                <template if:true={errorMessage}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                        <span class="slds-assistive-text">Error</span>
+                        <p>{errorMessage}</p>
+                    </div>
+                </template>
+                <template if:true={successMessage}>
+                    <div class="slds-notify slds-notify_toast slds-theme_success" role="alert">
+                        <p>{successMessage}</p>
+                    </div>
+                </template>
+                <div class="slds-form-element">
+                    <label class="slds-form-element__label" for="recommendationInput">Recommendation ID</label>
+                    <div class="slds-form-element__control">
+                        <lightning-input
+                            id="recommendationInput"
+                            type="text"
+                            placeholder="Enter recommendation ID"
+                            value={recommendationId}
+                            onchange={handleRecommendationChange}>
+                        </lightning-input>
+                    </div>
+                </div>
+                <div class="slds-m-top_small">
+                    <lightning-button
+                        label="Log Interaction"
+                        variant="brand"
+                        onclick={handleLogInteraction}>
+                    </lightning-button>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
