@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Escalation_Notes__c</fullName>
+    <label>Escalation Notes</label>
+    <type>LongTextArea</type>
+    <length>4000</length>
+    <visibleLines>5</visibleLines>
+    <description>Notes about why the case was escalated or special handling instructions.</description>
+</CustomField>

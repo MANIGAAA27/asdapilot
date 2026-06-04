@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Next_Agent_Action__c</fullName>
+    <label>Next Agent Action</label>
+    <type>Picklist</type>
+    <required>false</required>
+    <valueSet>
+        <restricted>true</restricted>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Contact customer</fullName>
+                <default>false</default>
+                <label>Contact customer</label>
+            </value>
+            <value>
+                <fullName>Investigate internally</fullName>
+                <default>false</default>
+                <label>Investigate internally</label>
+            </value>
+            <value>
+                <fullName>Escalate further</fullName>
+                <default>false</default>
+                <label>Escalate further</label>
+            </value>
+            <value>
+                <fullName>Resolve case</fullName>
+                <default>false</default>
+                <label>Resolve case</label>
+            </value>
+            <value>
+                <fullName>Request more information</fullName>
+                <default>false</default>
+                <label>Request more information</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

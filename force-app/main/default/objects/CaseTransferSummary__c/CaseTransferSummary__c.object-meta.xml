@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary</label>
+    <pluralLabel>Case Transfer Summaries</pluralLabel>
+    <nameField>
+        <label>Summary Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTS-{0000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ControlledByParent</sharingModel>
+    <description>Stores AI-generated summaries created when a Case is transferred to a new owner or queue.</description>
+    <enableReports>true</enableReports>
+    <enableActivities>false</enableActivities>
+    <enableHistory>true</enableHistory>
+    <enableBulkApi>true</enableBulkApi>
+    <enableSharing>true</enableSharing>
+    <enableStreamingApi>true</enableStreamingApi>
+</CustomObject>

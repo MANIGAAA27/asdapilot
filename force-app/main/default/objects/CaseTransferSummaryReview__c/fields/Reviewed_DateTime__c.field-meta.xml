@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reviewed_DateTime__c</fullName>
+    <label>Reviewed Date/Time</label>
+    <type>DateTime</type>
+    <required>true</required>
+    <description>Timestamp when the agent completed their review.</description>
+</CustomField>
