@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Object_Name__c</fullName>
+    <label>Object Name</label>
+    <description>API name of the Salesforce object this policy applies to (e.g., Account, Contact)</description>
+    <type>Text</type>
+    <length>80</length>
+    <required>false</required>
+</CustomField>
