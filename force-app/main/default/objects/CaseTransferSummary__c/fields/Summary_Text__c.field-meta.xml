@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Summary_Text__c</fullName>
+    <label>Summary Text</label>
+    <description>AI-generated transfer summary text for the case.</description>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>8</visibleLines>
+</CustomField>
