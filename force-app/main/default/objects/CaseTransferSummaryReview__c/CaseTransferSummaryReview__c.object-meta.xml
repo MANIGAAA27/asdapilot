@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: AI-Powered Case Transfer Summary | LLD-AIPoweredCaseTransferSummary -->
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary Review</label>
+    <pluralLabel>Case Transfer Summary Reviews</pluralLabel>
+    <nameField>
+        <label>Case Transfer Summary Review Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTSR-{0000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <description>Captures agent review details and feedback for case transfer summaries.</description>
+</CustomObject>

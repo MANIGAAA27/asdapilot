@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: AI-Powered Case Transfer Summary | LLD-AIPoweredCaseTransferSummary -->
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Summary_Quality_Rating__c</fullName>
+    <label>Summary Quality Rating</label>
+    <type>Number</type>
+    <precision>1</precision>
+    <scale>0</scale>
+    <required>false</required>
+    <description>The agent's quality rating of the AI-generated summary on a scale of 1 to 5.</description>
+</CustomField>
