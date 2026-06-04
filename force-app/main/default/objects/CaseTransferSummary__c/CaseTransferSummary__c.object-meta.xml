@@ -1,0 +1,109 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: AI-Powered Case Transfer Summary | LLD-AIPoweredCaseTransferSummary -->
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary</label>
+    <pluralLabel>Case Transfer Summaries</pluralLabel>
+    <nameField>
+        <label>Case Transfer Summary Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>CTS-{0000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <description>Stores AI-generated summaries created for case transfers between agents or queues.</description>
+    <fields>
+        <fullName>Case__c</fullName>
+        <label>Case</label>
+        <type>Lookup</type>
+        <referenceTo>Case</referenceTo>
+        <relationshipLabel>Case Transfer Summaries</relationshipLabel>
+        <relationshipName>CaseTransferSummaries</relationshipName>
+        <required>false</required>
+    </fields>
+    <fields>
+        <fullName>Summary_Text__c</fullName>
+        <label>Summary Text</label>
+        <type>LongTextArea</type>
+        <length>131072</length>
+        <visibleLines>10</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Generated_For__c</fullName>
+        <label>Generated For</label>
+        <type>Text</type>
+        <length>255</length>
+        <required>false</required>
+    </fields>
+    <fields>
+        <fullName>Generated_Timestamp__c</fullName>
+        <label>Generated Timestamp</label>
+        <type>DateTime</type>
+        <required>false</required>
+    </fields>
+    <fields>
+        <fullName>Generation_Status__c</fullName>
+        <label>Generation Status</label>
+        <type>Picklist</type>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>Pending</fullName>
+                    <default>true</default>
+                    <label>Pending</label>
+                </value>
+                <value>
+                    <fullName>In Progress</fullName>
+                    <default>false</default>
+                    <label>In Progress</label>
+                </value>
+                <value>
+                    <fullName>Success</fullName>
+                    <default>false</default>
+                    <label>Success</label>
+                </value>
+                <value>
+                    <fullName>Failed</fullName>
+                    <default>false</default>
+                    <label>Failed</label>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+        <required>false</required>
+    </fields>
+    <fields>
+        <fullName>Transfer_Reason__c</fullName>
+        <label>Transfer Reason</label>
+        <type>LongTextArea</type>
+        <length>32768</length>
+        <visibleLines>5</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Pending_Actions__c</fullName>
+        <label>Pending Actions</label>
+        <type>LongTextArea</type>
+        <length>32768</length>
+        <visibleLines>5</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Escalation_Notes__c</fullName>
+        <label>Escalation Notes</label>
+        <type>LongTextArea</type>
+        <length>32768</length>
+        <visibleLines>5</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Pending_Customer_Action__c</fullName>
+        <label>Pending Customer Action</label>
+        <type>LongTextArea</type>
+        <length>32768</length>
+        <visibleLines>5</visibleLines>
+    </fields>
+    <fields>
+        <fullName>Pending_Internal_Action__c</fullName>
+        <label>Pending Internal Action</label>
+        <type>LongTextArea</type>
+        <length>32768</length>
+        <visibleLines>5</visibleLines>
+    </fields>
+</CustomObject>

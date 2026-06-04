@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: AI-Powered Case Transfer Summary | LLD-AIPoweredCaseTransferSummary -->
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Missing_Context__c</fullName>
+    <label>Missing Context</label>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>5</visibleLines>
+    <description>Any context the agent identified as missing from the AI-generated summary.</description>
+</CustomField>
