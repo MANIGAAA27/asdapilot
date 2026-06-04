@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>isActive__c</fullName>
+    <label>Is Active</label>
+    <description>Controls whether this inactivation policy is active and will be executed by the scheduled batch</description>
+    <type>Checkbox</type>
+    <defaultValue>true</defaultValue>
+</CustomField>

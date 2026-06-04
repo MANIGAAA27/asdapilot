@@ -1,0 +1,5 @@
+## P0 Fixes: Error Framework Bypass
+
+### 1. Fix ApexClass.cls template
+
+```apex
