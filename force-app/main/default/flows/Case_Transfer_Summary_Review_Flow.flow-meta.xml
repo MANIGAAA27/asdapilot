@@ -1,0 +1,379 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Project: AI-Powered Case Transfer Summary | LLD-AIPoweredCaseTransferSummary -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Transfer Summary Review Flow</label>
+    <description>Screen flow launched from a Case Quick Action that displays the latest AI-generated transfer summary, collects agent acknowledgement and feedback, and creates a CaseTransferSummaryReview__c audit record.</description>
+    <interviewLabel>Case Transfer Summary Review {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ============================================================ -->
+    <!-- START                                                          -->
+    <!-- ============================================================ -->
+    <start>
+        <locationX>176</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>GetCaseRecord</targetReference>
+        </connector>
+    </start>
+
+    <!-- ============================================================ -->
+    <!-- VARIABLES                                                      -->
+    <!-- ============================================================ -->
+    <variables>
+        <name>recordId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- ============================================================ -->
+    <!-- CHOICES — Was Summary Useful                                   -->
+    <!-- ============================================================ -->
+    <choices>
+        <name>choiceUsefulYes</name>
+        <choiceText>Yes</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Yes</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceUsefulPartially</name>
+        <choiceText>Partially</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Partially</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceUsefulNo</name>
+        <choiceText>No</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>No</stringValue>
+        </value>
+    </choices>
+
+    <!-- ============================================================ -->
+    <!-- CHOICES — Next Action                                          -->
+    <!-- ============================================================ -->
+    <choices>
+        <name>choiceNextContactCustomer</name>
+        <choiceText>Contact customer</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Contact customer</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceNextInvestigate</name>
+        <choiceText>Investigate internally</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Investigate internally</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceNextEscalate</name>
+        <choiceText>Escalate further</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Escalate further</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceNextResolve</name>
+        <choiceText>Resolve case</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Resolve case</stringValue>
+        </value>
+    </choices>
+    <choices>
+        <name>choiceNextRequestInfo</name>
+        <choiceText>Request more information</choiceText>
+        <dataType>String</dataType>
+        <value>
+            <stringValue>Request more information</stringValue>
+        </value>
+    </choices>
+
+    <!-- ============================================================ -->
+    <!-- RECORD LOOKUPS                                                 -->
+    <!-- ============================================================ -->
+    <recordLookups>
+        <name>GetCaseRecord</name>
+        <label>Get Case Record</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <connector>
+            <targetReference>GetLatestSummary</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <recordLookups>
+        <name>GetLatestSummary</name>
+        <label>Get Latest Transfer Summary</label>
+        <locationX>176</locationX>
+        <locationY>268</locationY>
+        <connector>
+            <targetReference>CheckSummaryAvailable</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Case__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Generation_Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Success</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CaseTransferSummary__c</object>
+        <sortField>Generated_Timestamp__c</sortField>
+        <sortOrder>Desc</sortOrder>
+        <storeOutputAutomatically>true</storeOutputAutomatically>
+    </recordLookups>
+
+    <!-- ============================================================ -->
+    <!-- DECISIONS                                                      -->
+    <!-- ============================================================ -->
+    <decisions>
+        <name>CheckSummaryAvailable</name>
+        <label>Summary Available?</label>
+        <locationX>176</locationX>
+        <locationY>402</locationY>
+        <defaultConnector>
+            <targetReference>NoSummaryScreen</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Summary Found</defaultConnectorLabel>
+        <rules>
+            <name>SummaryFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>GetLatestSummary.Id</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>ReviewSummaryScreen</targetReference>
+            </connector>
+            <label>Summary Found</label>
+        </rules>
+    </decisions>
+
+    <!-- ============================================================ -->
+    <!-- SCREENS                                                        -->
+    <!-- ============================================================ -->
+
+    <!-- Screen: Review Transfer Summary (Summary Found path) -->
+    <screens>
+        <name>ReviewSummaryScreen</name>
+        <label>Review Case Transfer Summary</label>
+        <locationX>50</locationX>
+        <locationY>536</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>CreateReviewRecord</targetReference>
+        </connector>
+
+        <!-- Section 1: Case Snapshot (read-only) -->
+        <fields>
+            <name>displayCaseSnapshot</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;strong&gt;Case Snapshot&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;Case Number:&lt;/b&gt; {!GetCaseRecord.CaseNumber}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Subject:&lt;/b&gt; {!GetCaseRecord.Subject}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Status:&lt;/b&gt; {!GetCaseRecord.Status}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Priority:&lt;/b&gt; {!GetCaseRecord.Priority}&lt;/p&gt;</fieldText>
+        </fields>
+
+        <!-- Section 2: AI Transfer Summary (read-only) -->
+        <fields>
+            <name>displaySummaryHeader</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;strong&gt;AI Transfer Summary&lt;/strong&gt;&lt;/p&gt;&lt;p&gt;&lt;b&gt;Generated:&lt;/b&gt; {!GetLatestSummary.Generated_Timestamp__c}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Generated For:&lt;/b&gt; {!GetLatestSummary.Generated_For__c}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Transfer Reason:&lt;/b&gt; {!GetLatestSummary.Transfer_Reason__c}&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>displaySummaryText</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Summary:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;{!GetLatestSummary.Summary_Text__c}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Pending Actions:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;{!GetLatestSummary.Pending_Actions__c}&lt;/p&gt;&lt;p&gt;&lt;b&gt;Escalation Notes:&lt;/b&gt;&lt;/p&gt;&lt;p&gt;{!GetLatestSummary.Escalation_Notes__c}&lt;/p&gt;</fieldText>
+        </fields>
+
+        <!-- Section 3: Agent Acknowledgement -->
+        <fields>
+            <name>inputAcknowledged</name>
+            <fieldType>InputField</fieldType>
+            <dataType>Boolean</dataType>
+            <fieldText>I have reviewed the case transfer summary</fieldText>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>inputWasSummaryUseful</name>
+            <fieldType>RadioButtons</fieldType>
+            <dataType>String</dataType>
+            <fieldText>Was this summary useful?</fieldText>
+            <isRequired>true</isRequired>
+            <choiceReferences>choiceUsefulYes</choiceReferences>
+            <choiceReferences>choiceUsefulPartially</choiceReferences>
+            <choiceReferences>choiceUsefulNo</choiceReferences>
+        </fields>
+        <fields>
+            <name>inputSummaryQualityRating</name>
+            <fieldType>InputField</fieldType>
+            <dataType>Number</dataType>
+            <fieldText>Summary Quality Rating (1–5)</fieldText>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>inputNextAction</name>
+            <fieldType>DropdownBox</fieldType>
+            <dataType>String</dataType>
+            <fieldText>Next Action</fieldText>
+            <choiceReferences>choiceNextContactCustomer</choiceReferences>
+            <choiceReferences>choiceNextInvestigate</choiceReferences>
+            <choiceReferences>choiceNextEscalate</choiceReferences>
+            <choiceReferences>choiceNextResolve</choiceReferences>
+            <choiceReferences>choiceNextRequestInfo</choiceReferences>
+        </fields>
+        <fields>
+            <name>inputMissingContext</name>
+            <fieldType>LargeTextArea</fieldType>
+            <fieldText>What context was missing? (Optional)</fieldText>
+        </fields>
+        <fields>
+            <name>inputAgentComments</name>
+            <fieldType>LargeTextArea</fieldType>
+            <fieldText>Additional Comments (Optional)</fieldText>
+        </fields>
+    </screens>
+
+    <!-- Screen: No Summary Available (default/fallback path) -->
+    <screens>
+        <name>NoSummaryScreen</name>
+        <label>No Transfer Summary Available</label>
+        <locationX>440</locationX>
+        <locationY>536</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <!-- Terminal screen: no connector -->
+        <fields>
+            <name>displayNoSummaryMessage</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;No AI transfer summary is currently available for this case. Please review the case history manually before taking action.&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- Screen: Confirmation (after review record created) -->
+    <screens>
+        <name>ConfirmationScreen</name>
+        <label>Review Submitted</label>
+        <locationX>50</locationX>
+        <locationY>804</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <!-- Terminal screen: no connector -->
+        <fields>
+            <name>displayConfirmationMessage</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;Transfer summary reviewed successfully. You can now continue working the case.&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- ============================================================ -->
+    <!-- RECORD CREATES                                                 -->
+    <!-- ============================================================ -->
+    <recordCreates>
+        <name>CreateReviewRecord</name>
+        <label>Create Review Record</label>
+        <locationX>50</locationX>
+        <locationY>670</locationY>
+        <connector>
+            <targetReference>ConfirmationScreen</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Case__c</field>
+            <value>
+                <elementReference>recordId</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>CaseTransferSummary__c</field>
+            <value>
+                <elementReference>GetLatestSummary.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Reviewed_By__c</field>
+            <value>
+                <elementReference>$User.Id</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Reviewed_DateTime__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDateTime</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Was_Summary_Useful__c</field>
+            <value>
+                <elementReference>inputWasSummaryUseful</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Summary_Quality_Rating__c</field>
+            <value>
+                <elementReference>inputSummaryQualityRating</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Missing_Context__c</field>
+            <value>
+                <elementReference>inputMissingContext</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Next_Action_Selected__c</field>
+            <value>
+                <elementReference>inputNextAction</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Agent_Comments__c</field>
+            <value>
+                <elementReference>inputAgentComments</elementReference>
+            </value>
+        </inputAssignments>
+        <object>CaseTransferSummaryReview__c</object>
+    </recordCreates>
+</Flow>

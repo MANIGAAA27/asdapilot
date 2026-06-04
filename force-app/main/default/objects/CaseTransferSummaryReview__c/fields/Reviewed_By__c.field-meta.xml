@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Reviewed_By__c</fullName>
+    <label>Reviewed By</label>
+    <description>Lookup to the User who reviewed and acknowledged the case transfer summary.</description>
+    <type>Lookup</type>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Case Transfer Summary Reviews</relationshipLabel>
+    <relationshipName>Case_Transfer_Summary_Reviews_By_User</relationshipName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <required>false</required>
+</CustomField>
