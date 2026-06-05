@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Number_of_Transfer_Summaries__c</fullName>
+    <label>Number of Transfer Summaries</label>
+    <description>Roll-Up Summary count of related CaseTransferSummary__c records. Used by the Lightning App Builder visibility rule to show/hide the caseTransferSummaryPanel component (HLD-CMP-018).</description>
+    <type>Summary</type>
+    <summaryForeignKey>CaseTransferSummary__c.Case__c</summaryForeignKey>
+    <summaryOperation>COUNT</summaryOperation>
+</CustomField>
