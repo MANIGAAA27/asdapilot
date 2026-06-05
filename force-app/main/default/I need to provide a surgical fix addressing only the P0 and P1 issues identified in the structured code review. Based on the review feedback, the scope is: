@@ -1,0 +1,7 @@
+**SCOPE [P1]**: CustomField:SummaryText__c, CustomField:GenerationTimestamp__c, CustomField:GenerationStatus__c
+
+The issue is that these three custom fields need to be created as separate field-meta.xml files under the CaseTransferSummary__c object.
+
+Let me provide ONLY these three missing field metadata files:
+
+```xml

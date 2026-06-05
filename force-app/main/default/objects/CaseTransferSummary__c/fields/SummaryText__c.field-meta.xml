@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SummaryText__c</fullName>
+    <label>Summary Text</label>
+    <description>The generated summary text from the LLM. Contains the structured transfer context including case history, key issues, and pending actions. Supports up to 131,072 characters (Long Text Area max).</description>
+    <type>LongTextArea</type>
+    <length>131072</length>
+    <visibleLines>10</visibleLines>
+</CustomField>
