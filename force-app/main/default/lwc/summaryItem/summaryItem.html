@@ -1,0 +1,42 @@
+<template>
+    <div class="slds-box slds-box_x-small slds-var-m-bottom_x-small summary-item">
+        <div class="slds-grid slds-gutters slds-var-m-bottom_x-small">
+            <div class="slds-col">
+                <p class="slds-text-title_caps slds-text-color_weak">
+                    {formattedTimestamp}
+                </p>
+                <p class="slds-text-body_small slds-text-color_weak">
+                    Transferred to: {summary.GeneratedFor__c}
+                </p>
+            </div>
+            <div class="slds-col slds-text-align_right">
+                <lightning-badge
+                    label={summary.GenerationStatus__c}
+                    class={statusBadgeClass}>
+                </lightning-badge>
+            </div>
+        </div>
+
+        <template if:true={isSuccess}>
+            <div class="slds-var-m-top_x-small">
+                <p class="slds-text-body_regular">{summary.SummaryText__c}</p>
+            </div>
+        </template>
+
+        <template if:true={isFailed}>
+            <div class="slds-var-m-top_x-small">
+                <p class="slds-text-color_error slds-text-body_small">
+                    Summary generation failed for this transfer.
+                </p>
+            </div>
+        </template>
+
+        <template if:true={isInProgress}>
+            <div class="slds-var-m-top_x-small">
+                <p class="slds-text-color_weak slds-text-body_small">
+                    Generating summary&hellip;
+                </p>
+            </div>
+        </template>
+    </div>
+</template>

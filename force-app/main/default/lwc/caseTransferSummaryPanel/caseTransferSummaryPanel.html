@@ -1,0 +1,108 @@
+<template>
+    <lightning-card title="Case Transfer Summary" icon-name="standard:case_comment">
+        <div class="slds-var-p-around_medium">
+
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-var-p-around_medium">
+                    <lightning-spinner alternative-text="Loading summary..." size="small"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error state -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <p>{errorMessage}</p>
+                </div>
+            </template>
+
+            <!-- No summaries -->
+            <template if:false={hasSummaries}>
+                <template if:false={isLoading}>
+                    <template if:false={hasError}>
+                        <p class="slds-text-color_weak slds-text-align_center">
+                            No transfer summaries available.
+                        </p>
+                    </template>
+                </template>
+            </template>
+
+            <!-- Latest summary -->
+            <template if:true={hasSummaries}>
+                <template if:false={isLoading}>
+
+                    <!-- In Progress state -->
+                    <template if:true={isInProgress}>
+                        <div class="slds-box slds-theme_shade slds-var-m-bottom_small">
+                            <lightning-spinner alternative-text="Generating summary..." size="small"></lightning-spinner>
+                            <p class="slds-text-body_regular slds-var-m-top_small">
+                                Generating summary&hellip;
+                                <template if:true={latestSummary.GenerationTimestamp__c}>
+                                    (started {formattedTimestamp})
+                                </template>
+                            </p>
+                        </div>
+                    </template>
+
+                    <!-- Failed state -->
+                    <template if:true={isFailed}>
+                        <div class="slds-box slds-theme_error slds-var-m-bottom_small">
+                            <p class="slds-text-body_regular">
+                                Summary generation failed. Please try again later or contact your administrator.
+                            </p>
+                        </div>
+                    </template>
+
+                    <!-- Success state -->
+                    <template if:true={isSuccess}>
+                        <div class="slds-box slds-var-m-bottom_small">
+                            <div class="slds-grid slds-gutters slds-var-m-bottom_x-small">
+                                <div class="slds-col">
+                                    <p class="slds-text-title_caps slds-text-color_weak">
+                                        Generated For: {latestSummary.GeneratedFor__c}
+                                    </p>
+                                    <p class="slds-text-title_caps slds-text-color_weak">
+                                        {formattedTimestamp}
+                                    </p>
+                                </div>
+                                <div class="slds-col slds-text-align_right">
+                                    <lightning-button
+                                        label="Regenerate"
+                                        icon-name="utility:refresh"
+                                        onclick={handleRegenerate}
+                                        variant="neutral"
+                                        size="small">
+                                    </lightning-button>
+                                </div>
+                            </div>
+                            <div class="slds-var-m-top_small summary-text">
+                                <p>{latestSummary.SummaryText__c}</p>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- History list (collapsible) -->
+                    <template if:true={showHistory}>
+                        <div class="slds-var-m-top_medium">
+                            <button class="slds-button slds-button_neutral slds-button_stretch"
+                                    onclick={toggleHistory}>
+                                <lightning-icon icon-name={historyToggleIcon} size="x-small"
+                                               class="slds-var-m-right_x-small"></lightning-icon>
+                                Prior Summaries ({historyCount})
+                            </button>
+                            <template if:true={isHistoryExpanded}>
+                                <c-summary-history-list
+                                    case-id={recordId}
+                                    onrefresh={handleRefresh}>
+                                </c-summary-history-list>
+                            </template>
+                        </div>
+                    </template>
+
+                </template>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>
