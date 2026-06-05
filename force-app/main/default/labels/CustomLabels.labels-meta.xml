@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>summaryRefreshed</fullName>
+        <categories>CaseTransfer</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Summary Refreshed Event Name</shortDescription>
+        <value>summaryRefreshed</value>
+    </labels>
+    <labels>
+        <fullName>Queueable_Chunk_Size</fullName>
+        <categories>CaseTransfer</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>Queueable Chunk Size Default</shortDescription>
+        <value>5</value>
+    </labels>
+</CustomLabels>

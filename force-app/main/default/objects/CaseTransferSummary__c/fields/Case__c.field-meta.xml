@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Case__c</fullName>
+    <label>Case</label>
+    <description>Master-detail relationship to the parent Case record. Implements SEC-01: access is controlled by parent Case sharing.</description>
+    <type>MasterDetail</type>
+    <referenceTo>Case</referenceTo>
+    <relationshipLabel>Case Transfer Summaries</relationshipLabel>
+    <relationshipName>Case_Transfer_Summaries</relationshipName>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
