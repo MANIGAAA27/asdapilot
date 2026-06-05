@@ -1,0 +1,5 @@
+## P0 Fixes (Critical - Must Fix First)
+
+### P0 Issue 1: Missing Custom Metadata Type Definition
+
+```xml
