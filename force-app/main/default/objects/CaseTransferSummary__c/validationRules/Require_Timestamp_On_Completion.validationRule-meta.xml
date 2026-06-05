@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Require_Timestamp_On_Completion</fullName>
+    <active>true</active>
+    <description>Enforces that GenerationTimestamp__c is populated whenever GenerationStatus__c is set to Success or Failed. Prevents orphaned records without a completion timestamp.</description>
+    <errorConditionFormula>AND(
+    OR(
+        ISPICKVAL(GenerationStatus__c, 'Success'),
+        ISPICKVAL(GenerationStatus__c, 'Failed')
+    ),
+    ISBLANK(GenerationTimestamp__c)
+)</errorConditionFormula>
+    <errorDisplayField>GenerationTimestamp__c</errorDisplayField>
+    <errorMessage>Generation Timestamp is required when status is Success or Failed.</errorMessage>
+</ValidationRule>

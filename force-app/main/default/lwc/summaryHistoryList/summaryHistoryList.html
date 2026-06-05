@@ -1,0 +1,26 @@
+<template>
+    <div class="slds-var-m-top_small">
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center slds-var-p-around_small">
+                <lightning-spinner alternative-text="Loading history..." size="small"></lightning-spinner>
+            </div>
+        </template>
+
+        <template if:false={isLoading}>
+            <template if:true={hasHistory}>
+                <template for:each={summaryHistory} for:item="summary">
+                    <c-summary-item
+                        key={summary.Id}
+                        summary={summary}>
+                    </c-summary-item>
+                </template>
+            </template>
+
+            <template if:false={hasHistory}>
+                <p class="slds-text-color_weak slds-text-align_center slds-var-p-around_small">
+                    No prior summaries available.
+                </p>
+            </template>
+        </template>
+    </div>
+</template>

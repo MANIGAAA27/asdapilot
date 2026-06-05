@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>LLMResponseCode__c</fullName>
+    <label>LLM Response Code</label>
+    <description>The HTTP status code returned by the LLM API call. Admin-only visibility for diagnostics.</description>
+    <type>Text</type>
+    <length>10</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>
