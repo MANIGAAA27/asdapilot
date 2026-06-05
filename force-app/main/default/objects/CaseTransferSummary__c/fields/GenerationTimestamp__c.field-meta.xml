@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>GenerationTimestamp__c</fullName>
+    <label>Generation Timestamp</label>
+    <description>Date and time when the summary generation was initiated. Used for audit trail and recency filtering in the UI auto-expand logic.</description>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>
