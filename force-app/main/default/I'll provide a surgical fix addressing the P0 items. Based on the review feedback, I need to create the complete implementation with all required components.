@@ -1,0 +1,16 @@
+## SURGICAL CODE FIX — REVISION #1
+
+**Pre-emission checklist:**
+- [ ] Starting from canonical templates in `.sfdx-templates/sfdx/`
+- [ ] No `<apiVersion>` on Flow/Object/Field/Layout/PermissionSet metadata
+- [ ] All Apex identifiers avoid reserved names (`exception`, `system`, etc.)
+- [ ] Test classes emit immediately after production classes
+- [ ] All cross-references resolve within the package
+- [ ] No TODO/PLACEHOLDER comments
+- [ ] All braces balanced
+
+---
+
+### FILE 1: Custom Object - Case Transfer Summary
+
+```xml
