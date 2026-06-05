@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Suppression_Enabled__c</fullName>
+    <label>Suppression Enabled</label>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+    <description>When true, inactive records of this object type are suppressed from lookups and searches.</description>
+</CustomField>
