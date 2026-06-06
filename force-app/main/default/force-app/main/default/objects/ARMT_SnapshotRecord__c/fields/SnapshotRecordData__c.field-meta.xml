@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SnapshotRecordData__c</fullName>
+    <label>Snapshot Record Data</label>
+    <type>LongTextArea</type>
+    <length>131072</length>
+    <visibleLines>10</visibleLines>
+    <description>Long text field containing serialized snapshot record data.</description>
+</CustomField>

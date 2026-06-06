@@ -1,0 +1,127 @@
+<!--
+  @file         armtValidationReport.html
+  @description  Standalone Lightning Web Component for displaying and filtering validation
+                report details. Renders a filterable table of ARMT_ValidationReport__c records
+                with severity badges and dispatches completion events to parent components.
+  @author       ASDA Dev Agent
+  @see          HLD-ARMT-V1.0 Section 3.4, HLD-CMP-023
+-->
+<template>
+    <lightning-card title="Validation Report" icon-name="standard:report">
+        <div class="slds-m-around_medium">
+
+            <!-- Filter Controls -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        name="statusFilter"
+                        label="Filter by Status"
+                        placeholder="All Statuses"
+                        value={selectedStatus}
+                        options={statusOptions}
+                        onchange={handleStatusFilterChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-3 slds-align-bottom">
+                    <lightning-button
+                        label="Clear Filter"
+                        onclick={handleClearFilter}
+                        class="slds-m-left_small">
+                    </lightning-button>
+                </div>
+                <div class="slds-col slds-size_1-of-3 slds-align-bottom slds-text-align_right">
+                    <lightning-button
+                        variant="brand"
+                        label="Mark Complete"
+                        onclick={handleMarkComplete}
+                        disabled={isMarkCompleteDisabled}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading validation reports..." size="medium"></lightning-spinner>
+            </template>
+
+            <!-- Error State -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template if:true={isEmpty}>
+                <div class="slds-illustration slds-illustration_small slds-m-top_medium">
+                    <div class="slds-text-longform">
+                        <p class="slds-text-body_regular">No validation reports found.</p>
+                        <template if:true={hasActiveFilter}>
+                            <p class="slds-text-body_small">Try clearing the status filter to see all reports.</p>
+                        </template>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Validation Report Table -->
+            <template if:true={hasRecords}>
+                <div class="slds-m-top_small">
+                    <!-- Summary Badges -->
+                    <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                        <div class="slds-col">
+                            <span class="slds-badge slds-badge_error slds-m-right_x-small">
+                                BLOCKERS: {blockerCount}
+                            </span>
+                            <span class="slds-badge slds-badge_warning slds-m-right_x-small">
+                                WARNINGS: {warningCount}
+                            </span>
+                            <span class="slds-badge slds-m-right_x-small">
+                                INFO: {infoCount}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Data Table -->
+                    <table class="slds-table slds-table--bordered slds-table_cell-buffer" role="grid">
+                        <thead>
+                            <tr class="slds-line-height_reset">
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Report ID">Report ID</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Status">Status</div>
+                                </th>
+                                <th scope="col">
+                                    <div class="slds-truncate" title="Summary">Summary</div>
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <template for:each={filteredReports} for:item="report">
+                                <tr key={report.Id} class={report.rowClass}>
+                                    <td data-label="Report ID">
+                                        <div class="slds-truncate" title={report.Report_Id__c}>
+                                            {report.Report_Id__c}
+                                        </div>
+                                    </td>
+                                    <td data-label="Status">
+                                        <span class={report.badgeClass}>
+                                            {report.Validation_Status__c}
+                                        </span>
+                                    </td>
+                                    <td data-label="Summary">
+                                        <div class="slds-cell-wrap">
+                                            {report.Summary__c}
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </tbody>
+                    </table>
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

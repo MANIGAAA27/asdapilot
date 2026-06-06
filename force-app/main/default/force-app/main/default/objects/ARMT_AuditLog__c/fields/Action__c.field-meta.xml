@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Action__c</fullName>
+    <label>Action</label>
+    <type>Picklist</type>
+    <required>true</required>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Scan Started</fullName>
+                <default>false</default>
+                <label>Scan Started</label>
+            </value>
+            <value>
+                <fullName>Validation Run</fullName>
+                <default>false</default>
+                <label>Validation Run</label>
+            </value>
+            <value>
+                <fullName>Migration Started</fullName>
+                <default>false</default>
+                <label>Migration Started</label>
+            </value>
+            <value>
+                <fullName>Migration Paused</fullName>
+                <default>false</default>
+                <label>Migration Paused</label>
+            </value>
+            <value>
+                <fullName>Migration Resumed</fullName>
+                <default>false</default>
+                <label>Migration Resumed</label>
+            </value>
+            <value>
+                <fullName>Rollback Initiated</fullName>
+                <default>false</default>
+                <label>Rollback Initiated</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>

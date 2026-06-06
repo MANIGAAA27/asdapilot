@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Object_Type__c</fullName>
+    <label>Object Type</label>
+    <type>Picklist</type>
+    <required>true</required>
+    <valueSet>
+        <valueSetDefinition>
+            <sorted>false</sorted>
+            <value>
+                <fullName>Product</fullName>
+                <default>false</default>
+                <label>Product</label>
+            </value>
+            <value>
+                <fullName>Bundle</fullName>
+                <default>false</default>
+                <label>Bundle</label>
+            </value>
+            <value>
+                <fullName>PriceRule</fullName>
+                <default>false</default>
+                <label>PriceRule</label>
+            </value>
+            <value>
+                <fullName>DiscountSchedule</fullName>
+                <default>false</default>
+                <label>DiscountSchedule</label>
+            </value>
+            <value>
+                <fullName>PriceBook</fullName>
+                <default>false</default>
+                <label>PriceBook</label>
+            </value>
+            <value>
+                <fullName>Other</fullName>
+                <default>false</default>
+                <label>Other</label>
+            </value>
+        </valueSetDefinition>
+    </valueSet>
+</CustomField>
