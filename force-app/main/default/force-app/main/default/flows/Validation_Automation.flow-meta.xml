@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Validation Automation</label>
+    <description>Automation flow for pre-migration validation logic. Invokes ARMT_PreMigrationValidator to run validation checks and create ARMT_ValidationReport__c records. Primarily orchestrates Apex-based validation methods.</description>
+    <interviewLabel>Validation Automation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- Input Variables -->
+    <variables>
+        <name>inputReportId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <description>The unique report identifier to associate with this validation run.</description>
+    </variables>
+
+    <variables>
+        <name>inputSummaryPrefix</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <description>Optional prefix to prepend to the generated validation summary.</description>
+    </variables>
+
+    <variables>
+        <name>inputSourceObjectNames</name>
+        <dataType>String</dataType>
+        <isCollection>true</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+        <description>List of source CPQ object API names to validate.</description>
+    </variables>
+
+    <!-- Output Variables -->
+    <variables>
+        <name>outputValidationReportId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <description>Salesforce Id of the created ARMT_ValidationReport__c record.</description>
+    </variables>
+
+    <variables>
+        <name>outputOverallStatus</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <description>Overall validation status: BLOCKER, WARNING, or INFO.</description>
+    </variables>
+
+    <variables>
+        <name>outputBlockerCount</name>
+        <dataType>Number</dataType>
+        <scale>0</scale>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+        <description>Number of BLOCKER findings from the validation run.</description>
+    </variables>
+
+    <!-- Start Element -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>RunValidation</targetReference>
+        </connector>
+    </start>
+
+    <!-- Action: Invoke ARMT_PreMigrationValidator -->
+    <actionCalls>
+        <name>RunValidation</name>
+        <label>Run Pre-Migration Validation</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <actionName>ARMT_PreMigrationValidator</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>EvaluateBlockers</targetReference>
+        </connector>
+        <inputParameters>
+            <name>reportId</name>
+            <value>
+                <elementReference>inputReportId</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>summaryPrefix</name>
+            <value>
+                <elementReference>inputSummaryPrefix</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>sourceObjectNames</name>
+            <value>
+                <elementReference>inputSourceObjectNames</elementReference>
+            </value>
+        </inputParameters>
+        <outputParameters>
+            <assignToReference>outputValidationReportId</assignToReference>
+            <name>validationReportId</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>outputOverallStatus</assignToReference>
+            <name>overallStatus</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>outputBlockerCount</assignToReference>
+            <name>blockerCount</name>
+        </outputParameters>
+    </actionCalls>
+
+    <!-- Decision: Evaluate if blockers exist -->
+    <decisions>
+        <name>EvaluateBlockers</name>
+        <label>Evaluate Blockers</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <defaultConnector>
+            <targetReference>ValidationPassedAssignment</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Blockers</defaultConnectorLabel>
+        <rules>
+            <name>HasBlockers</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>outputOverallStatus</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BLOCKER</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>ValidationBlockedAssignment</targetReference>
+            </connector>
+            <label>Has Blockers</label>
+        </rules>
+    </decisions>
+
+    <!-- Assignment: Validation passed (no blockers) -->
+    <assignments>
+        <name>ValidationPassedAssignment</name>
+        <label>Mark Validation Passed</label>
+        <locationX>448</locationX>
+        <locationY>370</locationY>
+        <assignmentItems>
+            <assignToReference>outputOverallStatus</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>outputOverallStatus</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <!-- Assignment: Validation blocked -->
+    <assignments>
+        <name>ValidationBlockedAssignment</name>
+        <label>Mark Validation Blocked</label>
+        <locationX>176</locationX>
+        <locationY>370</locationY>
+        <assignmentItems>
+            <assignToReference>outputOverallStatus</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>BLOCKER</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+</Flow>
