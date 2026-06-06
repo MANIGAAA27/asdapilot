@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Log_Timestamp__c</fullName>
+    <label>Log Timestamp</label>
+    <type>DateTime</type>
+    <required>false</required>
+    <description>The date and time when this log entry was created.</description>
+</CustomField>

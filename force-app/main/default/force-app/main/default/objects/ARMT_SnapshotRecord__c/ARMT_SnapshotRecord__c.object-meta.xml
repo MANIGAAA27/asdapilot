@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ARMT Snapshot Record</label>
+    <pluralLabel>ARMT Snapshot Records</pluralLabel>
+    <nameField>
+        <label>Name</label>
+        <type>Text</type>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <description>Stores individual snapshot record data associated with a migration snapshot.</description>
+</CustomObject>

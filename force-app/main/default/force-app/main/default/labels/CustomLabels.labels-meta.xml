@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>ARMT_FlowLog</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ARMT Flow Log Target</shortDescription>
+        <value>ARMT_FlowLog__c</value>
+    </labels>
+</CustomLabels>
