@@ -1,0 +1,49 @@
+<!-- lwcValidationReport — Parent/dashboard LWC for the validation report component tree -->
+<template>
+    <lightning-card title="Validation Dashboard" icon-name="standard:dashboard">
+        <div class="slds-p-around_medium">
+
+            <!-- Header actions -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_3-of-4">
+                    <h2 class="slds-text-heading_medium">
+                        Migration Validation Results
+                    </h2>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        Review all validation findings before proceeding with migration execution.
+                    </p>
+                </div>
+                <div class="slds-col slds-size_1-of-4 slds-text-align_right">
+                    <lightning-button
+                        variant="brand"
+                        label="Refresh"
+                        icon-name="utility:refresh"
+                        onclick={handleRefresh}>
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Overall status banner -->
+            <template if:true={hasOverallStatus}>
+                <div class={overallStatusClass} role="status">
+                    <span class="slds-assistive-text">Status</span>
+                    <lightning-icon
+                        icon-name={overallStatusIcon}
+                        size="small"
+                        class="slds-m-right_x-small">
+                    </lightning-icon>
+                    <strong>{overallStatusLabel}</strong>
+                    <span class="slds-m-left_small">{overallStatusMessage}</span>
+                </div>
+            </template>
+
+            <!-- Child validation report component -->
+            <c-armt-validation-report
+                reports={reportData}
+                is-loading={isLoading}
+                error-message={errorMessage}>
+            </c-armt-validation-report>
+
+        </div>
+    </lightning-card>
+</template>

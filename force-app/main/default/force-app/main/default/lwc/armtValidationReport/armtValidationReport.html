@@ -1,0 +1,87 @@
+<!-- armtValidationReport — Standalone LWC for displaying and filtering validation report details -->
+<template>
+    <lightning-card title="Validation Report" icon-name="standard:report">
+        <div class="slds-p-around_medium">
+
+            <!-- Filter bar -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-3">
+                    <lightning-combobox
+                        name="statusFilter"
+                        label="Filter by Status"
+                        value={selectedStatus}
+                        placeholder="All Statuses"
+                        options={statusOptions}
+                        onchange={handleStatusFilterChange}>
+                    </lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-3 slds-align-bottom">
+                    <lightning-button
+                        label="Clear Filter"
+                        onclick={handleClearFilter}
+                        class="slds-m-top_small">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Summary badges -->
+            <template if:true={hasSummary}>
+                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                    <div class="slds-col">
+                        <lightning-badge
+                            label={blockerLabel}
+                            class="slds-theme_error">
+                        </lightning-badge>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-badge
+                            label={warningLabel}
+                            class="slds-theme_warning">
+                        </lightning-badge>
+                    </div>
+                    <div class="slds-col">
+                        <lightning-badge
+                            label={infoLabel}>
+                        </lightning-badge>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Loading validation report..."
+                    size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Error state -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <p>{errorMessage}</p>
+                </div>
+            </template>
+
+            <!-- Report data table -->
+            <template if:false={isLoading}>
+                <template if:true={hasReports}>
+                    <lightning-datatable
+                        key-field="id"
+                        data={filteredReports}
+                        columns={columns}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </template>
+                <template if:false={hasReports}>
+                    <div class="slds-illustration slds-illustration_small">
+                        <p class="slds-text-body_regular slds-text-color_weak">
+                            No validation report entries found.
+                        </p>
+                    </div>
+                </template>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

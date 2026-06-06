@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ValidationRule xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>BR_013</fullName>
+    <active>true</active>
+    <description>Business rule enforcing no duplicate record of the same object type and name on ARMT_Catalogue__c.</description>
+    <errorConditionFormula>ARMT_Duplicate_Check__c = TRUE</errorConditionFormula>
+    <errorMessage>A catalogue record with the same object type and name already exists. Duplicate records are not permitted (BR-013).</errorMessage>
+</ValidationRule>

@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>CPQ Validation Exec</label>
+    <description>Record-triggered flow that evaluates new mapping records and invokes validation reporting. Fires after insert on ARMT_MappingRegistry__c to trigger validation logic.</description>
+    <interviewLabel>CPQ Validation Exec {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+    <triggerType>RecordAfterSave</triggerType>
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>ARMT_MappingRegistry__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>EvaluateConfidenceScore</targetReference>
+        </connector>
+    </start>
+    <decisions>
+        <name>EvaluateConfidenceScore</name>
+        <label>Evaluate Confidence Score</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <defaultConnector>
+            <targetReference>LogLowConfidence</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Low Confidence</defaultConnectorLabel>
+        <rules>
+            <name>HighConfidenceBranch</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.ConfidenceScore__c</leftValueReference>
+                <operator>GreaterThanOrEqualTo</operator>
+                <rightValue>
+                    <numberValue>0.8</numberValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>LogHighConfidence</targetReference>
+            </connector>
+            <label>High Confidence</label>
+        </rules>
+    </decisions>
+    <recordCreates>
+        <name>LogHighConfidence</name>
+        <label>Log High Confidence</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <stringValue>High Confidence Mapping Validated</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description__c</field>
+            <value>
+                <elementReference>$Record.SourceFieldAPI__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Source__c</field>
+            <value>
+                <stringValue>CPQValidationExec</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Log_Timestamp__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDateTime</elementReference>
+            </value>
+        </inputAssignments>
+        <object>ARMT_FlowLog__c</object>
+    </recordCreates>
+    <recordCreates>
+        <name>LogLowConfidence</name>
+        <label>Log Low Confidence</label>
+        <locationX>50</locationX>
+        <locationY>250</locationY>
+        <inputAssignments>
+            <field>Name</field>
+            <value>
+                <stringValue>Low Confidence Mapping Flagged</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Description__c</field>
+            <value>
+                <elementReference>$Record.SourceFieldAPI__c</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Source__c</field>
+            <value>
+                <stringValue>CPQValidationExec</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Log_Timestamp__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDateTime</elementReference>
+            </value>
+        </inputAssignments>
+        <object>ARMT_FlowLog__c</object>
+    </recordCreates>
+</Flow>
