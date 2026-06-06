@@ -1,0 +1,100 @@
+<template>
+    <lightning-card title="Validation Report" icon-name="standard:report">
+        <!-- Filter Bar -->
+        <div class="slds-card__body slds-card__body_inner">
+            <div class="slds-grid slds-gutters slds-wrap slds-m-bottom_medium">
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_4-of-12">
+                    <lightning-input
+                        type="search"
+                        label="Search Findings"
+                        placeholder="Search by message or reference..."
+                        value={searchTerm}
+                        onchange={handleSearchChange}
+                    ></lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12">
+                    <lightning-combobox
+                        label="Filter by Status"
+                        value={selectedStatus}
+                        placeholder="All Statuses"
+                        options={statusOptions}
+                        onchange={handleStatusFilterChange}
+                    ></lightning-combobox>
+                </div>
+                <div class="slds-col slds-size_1-of-1 slds-medium-size_3-of-12 slds-align-bottom">
+                    <lightning-button
+                        label="Clear Filters"
+                        onclick={handleClearFilters}
+                        class="slds-m-top_large"
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- Summary Badges -->
+            <template if:true={hasSummaryData}>
+                <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="slds-box slds-theme_error slds-text-align_center">
+                            <p class="slds-text-heading_large">{blockerCount}</p>
+                            <p class="slds-text-body_small">Blockers</p>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="slds-box slds-theme_warning slds-text-align_center">
+                            <p class="slds-text-heading_large">{warningCount}</p>
+                            <p class="slds-text-body_small">Warnings</p>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="slds-box slds-theme_success slds-text-align_center">
+                            <p class="slds-text-heading_large">{infoCount}</p>
+                            <p class="slds-text-body_small">Info</p>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Loading validation report..."
+                    size="medium"
+                ></lightning-spinner>
+            </template>
+
+            <!-- Error State -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- Empty State -->
+            <template if:true={isEmpty}>
+                <div class="slds-illustration slds-illustration_small slds-m-vertical_large">
+                    <div class="slds-text-longform slds-text-align_center">
+                        <h3 class="slds-text-heading_medium">No Validation Reports Found</h3>
+                        <p class="slds-text-body_regular">
+                            No validation reports match the current filters.
+                            Run a pre-migration validation to generate a report.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Data Table -->
+            <template if:true={hasRecords}>
+                <lightning-datatable
+                    key-field="id"
+                    data={filteredReports}
+                    columns={columns}
+                    hide-checkbox-column
+                    sorted-by={sortedBy}
+                    sorted-direction={sortedDirection}
+                    onsort={handleSort}
+                ></lightning-datatable>
+            </template>
+        </div>
+    </lightning-card>
+</template>
