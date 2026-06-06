@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Validation Automation</label>
+    <description>Automation referenced for validation logic. Provides a declarative entry point for validation workflows, primarily delegating complex validation to Apex methods via invocable actions.</description>
+    <interviewLabel>Validation Automation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <variables>
+        <name>validationStatus</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <variables>
+        <name>reportId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>EvaluateValidationStatus</targetReference>
+        </connector>
+    </start>
+
+    <decisions>
+        <name>EvaluateValidationStatus</name>
+        <label>Evaluate Validation Status</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <defaultConnector>
+            <targetReference>SetStatusInfo</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Blockers</defaultConnectorLabel>
+        <rules>
+            <name>HasBlockers</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>validationStatus</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>BLOCKER</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetStatusBlocker</targetReference>
+            </connector>
+            <label>Has Blockers</label>
+        </rules>
+    </decisions>
+
+    <assignments>
+        <name>SetStatusBlocker</name>
+        <label>Set Status Blocker</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <assignmentItems>
+            <assignToReference>validationStatus</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>BLOCKED</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <assignments>
+        <name>SetStatusInfo</name>
+        <label>Set Status Info</label>
+        <locationX>50</locationX>
+        <locationY>250</locationY>
+        <assignmentItems>
+            <assignToReference>validationStatus</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>PASSED</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+</Flow>

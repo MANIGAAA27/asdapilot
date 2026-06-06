@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ARMT_Duplicate_Check__c</fullName>
+    <label>ARMT Duplicate Check</label>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+    <description>Formula-driven or trigger-set flag used by BR-013 validation rule to detect duplicates.</description>
+</CustomField>

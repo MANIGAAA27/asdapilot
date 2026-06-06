@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ARMT Snapshot</label>
+    <pluralLabel>ARMT Snapshots</pluralLabel>
+    <nameField>
+        <label>Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>SS-{00000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>Private</sharingModel>
+    <description>Stores migration snapshot data for rollback and pre-migration state recovery.</description>
+</CustomObject>

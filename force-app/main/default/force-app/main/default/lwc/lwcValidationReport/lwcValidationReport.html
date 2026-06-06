@@ -1,0 +1,35 @@
+<!--
+  @file         lwcValidationReport.html
+  @description  Parent/dashboard Lightning Web Component for the validation report component tree.
+                Hosts the armtValidationReport child component and handles the validationcomplete
+                event dispatched by the child, updating the dashboard state accordingly.
+  @author       ASDA Dev Agent
+  @see          HLD-ARMT-V1.0 Section 3.4, HLD-CMP-023
+-->
+<template>
+    <lightning-card title="Validation Dashboard" icon-name="standard:dashboard">
+        <div class="slds-m-around_medium">
+
+            <!-- Completion Banner -->
+            <template if:true={isValidationComplete}>
+                <div class="slds-notify slds-notify_toast slds-theme_success" role="status">
+                    <span class="slds-assistive-text">Success</span>
+                    <div class="slds-notify__content">
+                        <h2 class="slds-text-heading_small">
+                            Validation complete! No blockers detected. You may proceed with migration.
+                        </h2>
+                        <p class="slds-text-body_small">
+                            Warnings: {completionSummary.warningCount} | Info: {completionSummary.infoCount}
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Child Validation Report Component -->
+            <c-armt-validation-report
+                onvalidationcomplete={handleValidationComplete}>
+            </c-armt-validation-report>
+
+        </div>
+    </lightning-card>
+</template>

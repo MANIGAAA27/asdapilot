@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomLabels xmlns="http://soap.sforce.com/2006/04/metadata">
+    <labels>
+        <fullName>DataAccessException</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>DataAccessException</shortDescription>
+        <value>A data access error occurred. Please check field-level security and object permissions.</value>
+    </labels>
+    <labels>
+        <fullName>ScanException</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ScanException</shortDescription>
+        <value>A scan error occurred while processing configuration data. Please review the audit log for details.</value>
+    </labels>
+    <labels>
+        <fullName>ValidationException</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ValidationException</shortDescription>
+        <value>A validation error occurred. Please resolve all blockers before proceeding with migration.</value>
+    </labels>
+    <labels>
+        <fullName>ARMT_FlowLog</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>ARMT Flow Log</shortDescription>
+        <value>Flow fault details logged to audit log. Please review the ARMT Audit Log for more information.</value>
+    </labels>
+    <labels>
+        <fullName>slds_table</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>slds-table</shortDescription>
+        <value>slds-table</value>
+    </labels>
+    <labels>
+        <fullName>slds_table_bordered</fullName>
+        <categories>ARMT</categories>
+        <language>en_US</language>
+        <protected>false</protected>
+        <shortDescription>slds-table--bordered</shortDescription>
+        <value>slds-table slds-table--bordered</value>
+    </labels>
+</CustomLabels>
