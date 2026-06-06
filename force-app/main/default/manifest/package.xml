@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>MigrationBatchJob</members>
+        <members>MigrationProgressMonitoring</members>
+        <members>TestDataFactory</members>
+        <members>TestMigrationBatchJob</members>
+        <members>TestMigrationProgressMonitoring</members>
+        <name>ApexClass</name>
+    </types>
+    <types>
+        <members>ARMT_Snapshot__c</members>
+        <members>ARMT_SnapshotRecord__c</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>ARMT_SnapshotRecord__c.Snapshot__c</members>
+        <name>CustomField</name>
+    </types>
+    <version>62.0</version>
+</Package>

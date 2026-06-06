@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ARMT Snapshot</label>
+    <pluralLabel>ARMT Snapshots</pluralLabel>
+    <nameField>
+        <label>Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>SS-{00000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <description>Stores migration snapshot data for rollback and pre-migration state recovery.</description>
+    <fields>
+        <fullName>Snapshot_Time__c</fullName>
+        <label>Snapshot Time</label>
+        <type>DateTime</type>
+        <required>true</required>
+    </fields>
+    <fields>
+        <fullName>Status__c</fullName>
+        <label>Status</label>
+        <type>Picklist</type>
+        <required>true</required>
+        <valueSet>
+            <valueSetDefinition>
+                <sorted>false</sorted>
+                <value>
+                    <fullName>In Progress</fullName>
+                    <label>In Progress</label>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Complete</fullName>
+                    <label>Complete</label>
+                    <default>false</default>
+                </value>
+                <value>
+                    <fullName>Rolled Back</fullName>
+                    <label>Rolled Back</label>
+                    <default>false</default>
+                </value>
+            </valueSetDefinition>
+        </valueSet>
+    </fields>
+    <fields>
+        <fullName>Record_Count__c</fullName>
+        <label>Record Count</label>
+        <type>Number</type>
+        <precision>18</precision>
+        <scale>0</scale>
+        <required>false</required>
+    </fields>
+    <fields>
+        <fullName>SnapshotData__c</fullName>
+        <label>Snapshot Data</label>
+        <type>LongTextArea</type>
+        <length>131072</length>
+        <visibleLines>5</visibleLines>
+        <required>false</required>
+        <description>Serialized snapshot data for rollback and pre-migration state recovery.</description>
+    </fields>
+</CustomObject>
