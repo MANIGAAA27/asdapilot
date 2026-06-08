@@ -3,5 +3,4 @@
     <fullName>Error_Message__c</fullName>
     <label>Error Message</label>
     <type>TextArea</type>
-    <length>32000</length>
 </CustomField>

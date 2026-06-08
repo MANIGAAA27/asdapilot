@@ -1,3 +1,4 @@
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 import { LightningElement, api, track, wire } from 'lwc';
 import getRelatedFiles from '@salesforce/apex/FileService.getRelatedFiles';
 

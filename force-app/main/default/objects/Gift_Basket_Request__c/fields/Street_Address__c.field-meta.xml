@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Street_Address__c</fullName>
+    <label>Street Address</label>
+    <description>Stores the recipient's street address for gift basket delivery.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+</CustomField>

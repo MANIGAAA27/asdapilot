@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA -->
 <Flow xmlns="http://soap.sforce.com/2006/04/metadata">
     <description>Screen Flow that guides users through creating a new Account record. Captures required fields (Account Name, Type, Industry) and optional fields (Phone, Website), validates inputs, creates the Account record, and displays a success confirmation with a link to the new record or a user-friendly error message if creation fails.</description>
     <interviewLabel>Account Creation {!$Flow.CurrentDateTime}</interviewLabel>
@@ -17,24 +18,6 @@
     </processMetadataValues>
     <processType>Flow</processType>
     <status>Active</status>
-
-    <!-- ═══════════════════════════════════════
-         DYNAMIC CHOICE SETS — Account Picklists
-         All same-type elements grouped together
-         per Salesforce Flow XSD ordering rules.
-         ═══════════════════════════════════════ -->
-    <dynamicChoiceSets>
-        <name>typeChoices</name>
-        <dataType>Picklist</dataType>
-        <picklistField>Type</picklistField>
-        <picklistObject>Account</picklistObject>
-    </dynamicChoiceSets>
-    <dynamicChoiceSets>
-        <name>industryChoices</name>
-        <dataType>Picklist</dataType>
-        <picklistField>Industry</picklistField>
-        <picklistObject>Account</picklistObject>
-    </dynamicChoiceSets>
 
     <!-- ═══════════════════════════════════════
          RECORD CREATE — Account
@@ -116,18 +99,16 @@
         </fields>
         <fields>
             <name>AccountTypeInput</name>
-            <choiceReferences>typeChoices</choiceReferences>
             <dataType>String</dataType>
             <fieldText>Account Type</fieldText>
-            <fieldType>DropdownBox</fieldType>
+            <fieldType>InputField</fieldType>
             <isRequired>true</isRequired>
         </fields>
         <fields>
             <name>AccountIndustryInput</name>
-            <choiceReferences>industryChoices</choiceReferences>
             <dataType>String</dataType>
             <fieldText>Industry</fieldText>
-            <fieldType>DropdownBox</fieldType>
+            <fieldType>InputField</fieldType>
             <isRequired>true</isRequired>
         </fields>
         <fields>

@@ -5,7 +5,6 @@
     <type>LongTextArea</type>
     <length>32768</length>
     <visibleLines>10</visibleLines>
-    <required>true</required>
     <trackTrending>false</trackTrending>
     <description>The generated summary content detailing the case transfer context. This field is mandatory.</description>
 </CustomField>
