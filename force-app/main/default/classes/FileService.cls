@@ -11,6 +11,7 @@
  *  - A single ContentDocument query retrieves file metadata.
  *  - Total SOQL calls: ≤ MAX_CHILD_RELATIONSHIPS + 2 per transaction.
  */
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 public with sharing class FileService {
 
     /** Maximum child relationships to traverse when collecting related records. */

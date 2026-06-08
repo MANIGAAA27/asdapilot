@@ -7,6 +7,7 @@
   @calledBy          SummarizationQueueable
   @testClass         CaseSummarizationServiceTest
  */
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 public with sharing class CaseSummarizationService {
     /**
       Aggregates relevant case data for summarization.
@@ -20,7 +21,7 @@ public with sharing class CaseSummarizationService {
     @AuraEnabled(cacheable=true)
     public static String aggregateCaseData(Id caseId) {
         try {
-            List<Case> cases = [SELECT Id, Subject, Description, (SELECT Body FROM CaseComments), (SELECT Body FROM Emails)
+            List<Case> cases = [SELECT Id, Subject, Description
                                 FROM Case WHERE Id = :caseId WITH SECURITY_ENFORCED];
             if (cases.isEmpty()) {
                 throw new AuraHandledException('No Case found for the given ID.');

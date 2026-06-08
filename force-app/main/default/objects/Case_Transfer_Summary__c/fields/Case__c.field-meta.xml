@@ -6,7 +6,8 @@
     <referenceTo>Case</referenceTo>
     <relationshipLabel>Transfer Summaries</relationshipLabel>
     <relationshipName>Transfer_Summaries</relationshipName>
-    <required>true</required>
+    <relationshipOrder>0</relationshipOrder>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
     <trackTrending>false</trackTrending>
     <writeRequiresMasterRead>true</writeRequiresMasterRead>
     <description>The Case record to which this summary belongs. This relationship is mandatory.</description>

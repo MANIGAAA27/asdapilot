@@ -7,6 +7,7 @@
   @calledBy          Case_After_Update_Trigger_Summarization
   @testClass         SummarizationQueueableTest
  */
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 public class SummarizationQueueable implements Queueable, Database.AllowsCallouts {
     private Id caseId;
 

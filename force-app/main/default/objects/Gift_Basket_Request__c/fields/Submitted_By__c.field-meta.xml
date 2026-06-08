@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Submitted_By__c</fullName>
+    <label>Submitted By</label>
+    <description>Lookup to the User who submitted the gift basket request.</description>
+    <type>Lookup</type>
+    <referenceTo>User</referenceTo>
+    <relationshipLabel>Gift Basket Requests (Submitted By)</relationshipLabel>
+    <relationshipName>Gift_Basket_Requests_Submitted_By</relationshipName>
+    <deleteConstraint>SetNull</deleteConstraint>
+    <required>false</required>
+</CustomField>

@@ -4,6 +4,7 @@
  * Helper class that checks user permissions and enforces security compliance
  * for the File Viewer component. Uses Schema describe calls — no SOQL.
  */
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 public with sharing class SecurityService {
 
     /**

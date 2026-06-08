@@ -7,6 +7,7 @@
   @calledBy          caseTransferSummary.js
   @testClass         CaseTransferSummaryControllerTest
  */
+// MODIFIED 2026-06-08 — Project: Gift Basket | CodeImplementation-GiftBasket | ASDA
 public with sharing class CaseTransferSummaryController {
     /**
       @description       Retrieves the most recent Case_Transfer_Summary__c record for a given Case Id.
