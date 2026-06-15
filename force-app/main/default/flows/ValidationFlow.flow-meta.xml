@@ -1,0 +1,106 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Validation Flow</label>
+    <description>Auto-launched flow that invokes PreMigrationValidator.validateDataIntegrity to perform pre-migration data integrity checks for a given Migration Job. Accepts a migrationJobId input and returns isValid, blockerCount, warningCount, and validationSummary as output variables.</description>
+    <interviewLabel>Validation Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ============================================================ -->
+    <!-- VARIABLES                                                     -->
+    <!-- ============================================================ -->
+
+    <!-- Input: ID of the Migration Job to validate -->
+    <variables>
+        <name>migrationJobId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- Output: true when zero blockers found -->
+    <variables>
+        <name>isValid</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- Output: number of blocking validation findings -->
+    <variables>
+        <name>blockerCount</name>
+        <dataType>Number</dataType>
+        <scale>0</scale>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- Output: number of warning-level validation findings -->
+    <variables>
+        <name>warningCount</name>
+        <dataType>Number</dataType>
+        <scale>0</scale>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- Output: human-readable summary returned by the validator -->
+    <variables>
+        <name>validationSummary</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- ============================================================ -->
+    <!-- START                                                         -->
+    <!-- ============================================================ -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>CallPreMigrationValidator</targetReference>
+        </connector>
+    </start>
+
+    <!-- ============================================================ -->
+    <!-- ACTION CALL — PreMigrationValidator @InvocableMethod          -->
+    <!-- ============================================================ -->
+    <actionCalls>
+        <name>CallPreMigrationValidator</name>
+        <label>Call Pre Migration Validator</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <actionName>PreMigrationValidator</actionName>
+        <actionType>apex</actionType>
+        <!-- No connector: terminal node for this AutoLaunchedFlow -->
+        <inputParameters>
+            <name>migrationJobId</name>
+            <value>
+                <elementReference>migrationJobId</elementReference>
+            </value>
+        </inputParameters>
+        <outputParameters>
+            <assignToReference>isValid</assignToReference>
+            <name>isValid</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>validationSummary</assignToReference>
+            <name>validationSummary</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>blockerCount</assignToReference>
+            <name>blockerCount</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>warningCount</assignToReference>
+            <name>warningCount</name>
+        </outputParameters>
+    </actionCalls>
+</Flow>
