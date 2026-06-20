@@ -1,0 +1,274 @@
+<template>
+    <lightning-card icon-name="utility:flow">
+        <div slot="title">
+            <span class="slds-text-heading_small">
+                <template if:true={selectedComponentName}>
+                    {selectedComponentName}
+                    <span class="slds-badge slds-m-left_x-small type-badge type-badge_{selectedComponentTypeLower}">{selectedComponentType}</span>
+                </template>
+                <template if:false={selectedComponentName}>
+                    Dependency Graph
+                </template>
+            </span>
+        </div>
+
+        <!-- Toolbar -->
+        <div slot="actions">
+            <lightning-button-group>
+                <lightning-button
+                    label="Graph"
+                    variant={graphViewVariant}
+                    onclick={handleGraphViewToggle}
+                    title="Switch to graph view"
+                ></lightning-button>
+                <lightning-button
+                    label="List"
+                    variant={listViewVariant}
+                    onclick={handleListViewToggle}
+                    title="Switch to list view"
+                ></lightning-button>
+            </lightning-button-group>
+            <lightning-button
+                label="Refresh Data"
+                icon-name="utility:refresh"
+                variant="neutral"
+                onclick={handleRefreshData}
+                disabled={isRefreshing}
+                class="slds-m-left_x-small"
+            ></lightning-button>
+        </div>
+
+        <div class="slds-p-around_medium">
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <div class="slds-grid slds-grid_align-center slds-p-vertical_large">
+                    <lightning-spinner alternative-text="Loading dependencies..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error Banner -->
+            <template if:true={errorMessage}>
+                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-bottom_small" role="alert">
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- Empty / Prompt State -->
+            <template if:true={showPromptState}>
+                <div class="slds-illustration slds-illustration_small slds-p-vertical_x-large">
+                    <div class="slds-text-align_center">
+                        <lightning-icon icon-name="utility:search" size="large" class="slds-m-bottom_medium icon-muted"></lightning-icon>
+                        <h3 class="slds-text-heading_medium">Select a component to visualize</h3>
+                        <p class="slds-text-body_regular slds-m-top_x-small">
+                            Use the Search panel to find a Flow, Object, or Apex class, then click it to render its dependency graph here.
+                        </p>
+                        <p class="slds-text-body_small slds-m-top_small slds-text-color_weak">
+                            Last sync: {syncStatusLabel}
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Main content (graph or list) rendered only when a component is selected -->
+            <template if:true={selectedComponentName}>
+
+                <!-- Stat Pills -->
+                <div class="slds-grid slds-gutters_small slds-wrap slds-m-bottom_medium">
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="stat-pill">
+                            <span class="stat-value">{totalNodes}</span>
+                            <span class="stat-label">Components</span>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="stat-pill">
+                            <span class="stat-value">{totalEdges}</span>
+                            <span class="stat-label">Dependencies</span>
+                        </div>
+                    </div>
+                    <div class="slds-col slds-size_1-of-3">
+                        <div class="stat-pill">
+                            <span class="stat-value">{maxDepthReached}</span>
+                            <span class="stat-label">Max Depth</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- GRAPH VIEW -->
+                <template if:true={isGraphView}>
+                    <div class="graph-container" onmousedown={handleCanvasDragStart}>
+                        <!-- SVG Graph Canvas -->
+                        <svg
+                            class="graph-svg"
+                            onmousemove={handleCanvasDragMove}
+                            onmouseup={handleCanvasDragEnd}
+                            onmouseleave={handleCanvasDragEnd}
+                            onwheel={handleCanvasWheel}
+                        >
+                            <g class="graph-viewport">
+                                <!-- Edge lines rendered first (below nodes) -->
+                                <template for:each={svgEdges} for:item="edge">
+                                    <line
+                                        key={edge.key}
+                                        x1={edge.x1}
+                                        y1={edge.y1}
+                                        x2={edge.x2}
+                                        y2={edge.y2}
+                                        class={edge.lineClass}
+                                        stroke-dasharray={edge.dashArray}
+                                    ></line>
+                                </template>
+
+                                <!-- Nodes rendered on top of edges -->
+                                <template for:each={svgNodes} for:item="node">
+                                    <g
+                                        key={node.key}
+                                        class={node.groupClass}
+                                        data-name={node.componentName}
+                                        data-type={node.componentType}
+                                        onclick={handleNodeClick}
+                                    >
+                                        <circle
+                                            cx={node.cx}
+                                            cy={node.cy}
+                                            r={node.radius}
+                                            class={node.circleClass}
+                                        ></circle>
+                                        <text
+                                            x={node.cx}
+                                            y={node.labelY}
+                                            class="node-label"
+                                            text-anchor="middle"
+                                        >{node.shortLabel}</text>
+                                        <text
+                                            x={node.cx}
+                                            y={node.typeY}
+                                            class="node-type-label"
+                                            text-anchor="middle"
+                                        >{node.componentType}</text>
+                                    </g>
+                                </template>
+                            </g>
+                        </svg>
+
+                        <!-- Zoom Controls -->
+                        <div class="zoom-controls">
+                            <lightning-button-icon
+                                icon-name="utility:add"
+                                variant="border-filled"
+                                size="small"
+                                onclick={handleZoomIn}
+                                title="Zoom in"
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                                icon-name="utility:dash"
+                                variant="border-filled"
+                                size="small"
+                                onclick={handleZoomOut}
+                                title="Zoom out"
+                            ></lightning-button-icon>
+                            <lightning-button-icon
+                                icon-name="utility:screen"
+                                variant="border-filled"
+                                size="small"
+                                onclick={handleZoomReset}
+                                title="Reset view"
+                            ></lightning-button-icon>
+                        </div>
+                    </div>
+                </template>
+
+                <!-- LIST VIEW -->
+                <template if:true={isListView}>
+                    <template if:true={hasGroupedNodes}>
+                        <template for:each={groupedNodes} for:item="group">
+                            <div key={group.type} class="slds-m-bottom_medium">
+                                <div class="slds-section slds-is-open">
+                                    <h3 class="slds-section__title slds-theme_shade slds-p-around_x-small">
+                                        <lightning-icon icon-name={group.iconName} size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        {group.type} ({group.count})
+                                    </h3>
+                                    <div class="slds-section__content">
+                                        <table class="slds-table slds-table_cell-buffer slds-table_bordered slds-table_striped">
+                                            <thead>
+                                                <tr class="slds-line-height_reset">
+                                                    <th scope="col"><div class="slds-truncate">Component</div></th>
+                                                    <th scope="col"><div class="slds-truncate">Relationship</div></th>
+                                                    <th scope="col"><div class="slds-truncate">Depth</div></th>
+                                                    <th scope="col"><div class="slds-truncate">Kind</div></th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <template for:each={group.items} for:item="item">
+                                                    <tr key={item.key} class="list-row" data-name={item.componentName} data-type={item.componentType} onclick={handleNodeClick}>
+                                                        <td>
+                                                            <div class="slds-truncate slds-text-body_regular">{item.componentName}</div>
+                                                        </td>
+                                                        <td>
+                                                            <span class="slds-badge rel-badge rel-badge_{item.relTypeClass}">{item.relationshipType}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span>{item.dependencyDepth}</span>
+                                                        </td>
+                                                        <td>
+                                                            <span class={item.kindClass}>{item.kindLabel}</span>
+                                                        </td>
+                                                    </tr>
+                                                </template>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                    <template if:false={hasGroupedNodes}>
+                        <p class="slds-text-body_regular slds-text-color_weak slds-p-vertical_medium">No dependencies found for this component with the current filters.</p>
+                    </template>
+                </template>
+
+            </template>
+
+        </div>
+
+        <!-- Side Panel Detail (slides in on node click) -->
+        <template if:true={selectedNode}>
+            <div class="side-panel">
+                <div class="side-panel-header slds-grid slds-grid_align-spread">
+                    <h3 class="slds-text-heading_small">{selectedNode.componentName}</h3>
+                    <lightning-button-icon
+                        icon-name="utility:close"
+                        variant="bare"
+                        size="small"
+                        onclick={handleCloseSidePanel}
+                        title="Close"
+                    ></lightning-button-icon>
+                </div>
+                <div class="side-panel-body">
+                    <dl class="slds-dl_horizontal">
+                        <dt class="slds-dl_horizontal__label slds-text-color_weak">Type</dt>
+                        <dd class="slds-dl_horizontal__detail">{selectedNode.componentType}</dd>
+                        <dt class="slds-dl_horizontal__label slds-text-color_weak">Relationship</dt>
+                        <dd class="slds-dl_horizontal__detail">{selectedNode.relationshipType}</dd>
+                        <dt class="slds-dl_horizontal__label slds-text-color_weak">Depth</dt>
+                        <dd class="slds-dl_horizontal__detail">{selectedNode.dependencyDepth}</dd>
+                        <dt class="slds-dl_horizontal__label slds-text-color_weak">Kind</dt>
+                        <dd class="slds-dl_horizontal__detail">{selectedNode.kindLabel}</dd>
+                        <dt class="slds-dl_horizontal__label slds-text-color_weak">Flow</dt>
+                        <dd class="slds-dl_horizontal__detail">{selectedNode.flowApiName}</dd>
+                    </dl>
+                    <div class="slds-m-top_medium">
+                        <lightning-button
+                            label="View Dependencies"
+                            variant="brand"
+                            onclick={handleDrillDown}
+                            size="small"
+                        ></lightning-button>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+    </lightning-card>
+</template>

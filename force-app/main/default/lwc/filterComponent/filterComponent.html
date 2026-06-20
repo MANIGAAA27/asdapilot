@@ -1,0 +1,100 @@
+<template>
+    <lightning-card title="Filters" icon-name="utility:filter">
+        <div class="slds-p-around_medium">
+
+            <!-- Direction Toggle -->
+            <div class="slds-form-element slds-m-bottom_small">
+                <label class="slds-form-element__label">Analysis Direction</label>
+                <div class="slds-form-element__control">
+                    <lightning-button-group>
+                        <lightning-button
+                            label="Upstream"
+                            variant={upstreamVariant}
+                            onclick={handleDirectionUpstream}
+                            title="Show what this component depends on"
+                        ></lightning-button>
+                        <lightning-button
+                            label="Downstream"
+                            variant={downstreamVariant}
+                            onclick={handleDirectionDownstream}
+                            title="Show what depends on this component"
+                        ></lightning-button>
+                    </lightning-button-group>
+                </div>
+            </div>
+
+            <!-- Component Type Filter -->
+            <lightning-combobox
+                label="Component Type"
+                value={selectedComponentType}
+                options={componentTypeOptions}
+                onchange={handleComponentTypeChange}
+                class="slds-m-bottom_small"
+            ></lightning-combobox>
+
+            <!-- Relationship Type Filter -->
+            <div class="slds-form-element slds-m-bottom_small">
+                <label class="slds-form-element__label slds-m-bottom_xx-small">Relationship Types</label>
+                <template for:each={relationshipTypeOptions} for:item="opt">
+                    <div key={opt.value} class="slds-checkbox slds-m-bottom_xx-small">
+                        <input
+                            type="checkbox"
+                            id={opt.value}
+                            data-value={opt.value}
+                            checked={opt.checked}
+                            onchange={handleRelationshipTypeChange}
+                        />
+                        <label class="slds-checkbox__label" for={opt.value}>
+                            <span class="slds-checkbox_faux"></span>
+                            <span class="slds-form-element__label">{opt.label}</span>
+                        </label>
+                    </div>
+                </template>
+            </div>
+
+            <!-- Max Depth Slider -->
+            <lightning-slider
+                label="Max Dependency Depth"
+                value={selectedDepth}
+                min="1"
+                max="5"
+                step="1"
+                onchange={handleDepthChange}
+                class="slds-m-bottom_small"
+            ></lightning-slider>
+            <p class="slds-text-body_small slds-m-bottom_medium">
+                Showing up to <strong>{selectedDepth}</strong> level(s) of dependencies.
+            </p>
+
+            <!-- Show Indirect Toggle -->
+            <lightning-input
+                type="toggle"
+                label="Show indirect (transitive) dependencies"
+                checked={showIndirect}
+                onchange={handleShowIndirectChange}
+                class="slds-m-bottom_small"
+            ></lightning-input>
+
+            <!-- Apply / Reset Buttons -->
+            <div class="slds-grid slds-gutters_small slds-m-top_small">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Apply Filters"
+                        variant="brand"
+                        onclick={handleApplyFilters}
+                        class="slds-button_stretch"
+                    ></lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Reset"
+                        variant="neutral"
+                        onclick={handleResetFilters}
+                        class="slds-button_stretch"
+                    ></lightning-button>
+                </div>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>

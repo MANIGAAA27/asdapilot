@@ -1,0 +1,110 @@
+<template>
+    <lightning-card title="Flow Dependency Visualizer" icon-name="utility:flow">
+        <div class="slds-p-around_medium">
+
+            <!-- Search Bar Row -->
+            <div class="slds-grid slds-gutters slds-m-bottom_small">
+                <div class="slds-col slds-size_3-of-4">
+                    <lightning-input
+                        type="search"
+                        label="Search Flows, Objects, or Apex Classes"
+                        placeholder="e.g. Account_Onboarding, Account, MyApexClass"
+                        value={searchTerm}
+                        onchange={handleSearchInput}
+                        onkeydown={handleKeyDown}
+                    ></lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-4 slds-grid slds-grid_vertical-align-end">
+                    <lightning-button
+                        label="Search"
+                        variant="brand"
+                        icon-name="utility:search"
+                        onclick={handleSearch}
+                        disabled={isSearchDisabled}
+                        class="slds-button_stretch"
+                    ></lightning-button>
+                </div>
+            </div>
+
+            <!-- Component Type Filter Row -->
+            <div class="slds-m-bottom_medium">
+                <lightning-button-group>
+                    <template for:each={typeFilters} for:item="filter">
+                        <lightning-button
+                            key={filter.value}
+                            label={filter.label}
+                            variant={filter.variant}
+                            data-type={filter.value}
+                            onclick={handleTypeFilterClick}
+                        ></lightning-button>
+                    </template>
+                </lightning-button-group>
+            </div>
+
+            <!-- Loading Spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Searching..." size="small"></lightning-spinner>
+            </template>
+
+            <!-- Error Banner -->
+            <template if:true={errorMessage}>
+                <div class="slds-notify slds-notify_alert slds-theme_error slds-m-bottom_small" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <span>{errorMessage}</span>
+                </div>
+            </template>
+
+            <!-- Search Results -->
+            <template if:true={hasResults}>
+                <div class="slds-m-bottom_small">
+                    <p class="slds-text-body_small slds-m-bottom_x-small">
+                        {resultCountLabel}
+                    </p>
+                    <ul class="slds-has-dividers_bottom-space">
+                        <template for:each={searchResults} for:item="result">
+                            <li key={result.key} class="slds-item result-item" onclick={handleResultSelect} data-name={result.componentName} data-type={result.componentType}>
+                                <div class="slds-media slds-media_center slds-p-vertical_x-small slds-p-horizontal_small result-row">
+                                    <div class="slds-media__figure">
+                                        <lightning-icon
+                                            icon-name={result.iconName}
+                                            size="small"
+                                            class={result.iconClass}
+                                        ></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <p class="slds-text-heading_small">{result.componentName}</p>
+                                        <p class="slds-text-body_small slds-text-color_weak">{result.componentTypeLabel}</p>
+                                    </div>
+                                    <div class="slds-media__figure slds-media__figure_reverse">
+                                        <lightning-icon icon-name="utility:chevronright" size="x-small"></lightning-icon>
+                                    </div>
+                                </div>
+                            </li>
+                        </template>
+                    </ul>
+                </div>
+            </template>
+
+            <!-- Empty State (after search with no results) -->
+            <template if:true={showEmptyState}>
+                <div class="slds-illustration slds-illustration_small slds-p-vertical_large">
+                    <div class="slds-text-align_center">
+                        <lightning-icon icon-name="utility:search" size="large" class="slds-m-bottom_medium icon-muted"></lightning-icon>
+                        <h3 class="slds-text-heading_medium">No components found</h3>
+                        <p class="slds-text-body_regular slds-m-top_x-small">
+                            Try searching with a different term or run a metadata sync first.
+                        </p>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Sync Status Footer -->
+            <div class="slds-m-top_medium slds-border_top slds-p-top_small">
+                <p class="slds-text-body_small slds-text-color_weak">
+                    Last sync: {syncStatusLabel}
+                </p>
+            </div>
+
+        </div>
+    </lightning-card>
+</template>
