@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Account 360 Manager</label>
+    <description>Grants Sales Leadership read access to all Account 360 related objects and fields. Assign to the Sales Leadership persona per HLD-CMP-091.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- ====================================================== -->
+    <!-- Apex Class Access                                        -->
+    <!-- ====================================================== -->
+    <classAccesses>
+        <apexClass>Account360_Service</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>ERP_Callout_Service</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- ====================================================== -->
+    <!-- Object Permissions                                       -->
+    <!-- ====================================================== -->
+    <objectPermissions>
+        <object>Account</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <object>ERP_Order__c</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- ====================================================== -->
+    <!-- Field-Level Security — Account custom fields            -->
+    <!-- ====================================================== -->
+    <fieldPermissions>
+        <field>Account.ERP_Customer_ID__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Account.Health_Score__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Account.Health_Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Account.Last_ERP_Sync__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- ====================================================== -->
+    <!-- Field-Level Security — ERP_Order__c fields             -->
+    <!-- ====================================================== -->
+    <fieldPermissions>
+        <field>ERP_Order__c.Order_Date__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>ERP_Order__c.Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>ERP_Order__c.ERP_Order_Amount__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+</PermissionSet>
