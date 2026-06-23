@@ -1,0 +1,153 @@
+<!-- migrationWizard.html
+     Top-level component for the wizard-driven CPQ-to-ARM migration interface.
+     Renders a three-step wizard: (1) Configuration input + validation,
+     (2) Validation results with proceed/back options, (3) Migration initiated.
+-->
+<template>
+    <lightning-card title="CPQ to ARM Migration Wizard" icon-name="standard:record_update">
+        <div class="slds-p-around_medium">
+
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner
+                    alternative-text="Processing..."
+                    size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- ====================================================== -->
+            <!-- STEP 1: Configure source and target objects             -->
+            <!-- ====================================================== -->
+            <template if:true={isStep1}>
+                <div class="slds-m-bottom_medium">
+                    <p class="slds-text-body_regular slds-m-bottom_small">
+                        Enter the API names for the source CPQ object and the target ARM object.
+                        Click <strong>Validate</strong> to run pre-flight checks before migration.
+                    </p>
+
+                    <lightning-input
+                        label="Source Object API Name"
+                        placeholder="e.g. SBQQ__Quote__c"
+                        value={sourceObject}
+                        onchange={handleSourceChange}
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+
+                    <lightning-input
+                        label="Target Object API Name"
+                        placeholder="e.g. arm__Quote__c"
+                        value={targetObject}
+                        onchange={handleTargetChange}
+                        class="slds-m-bottom_medium">
+                    </lightning-input>
+
+                    <lightning-button
+                        label="Validate Configuration"
+                        variant="brand"
+                        onclick={handleValidate}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+
+                <!-- Existing Object Mappings table -->
+                <template if:true={hasMappings}>
+                    <hr />
+                    <h3 class="slds-text-heading_small slds-m-bottom_small">Registered Object Mappings</h3>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={objectMappings}
+                        columns={mappingColumns}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </template>
+            </template>
+
+            <!-- ====================================================== -->
+            <!-- STEP 2: Validation results                              -->
+            <!-- ====================================================== -->
+            <template if:true={isStep2}>
+                <template if:true={validationSuccess}>
+                    <div class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium" role="alert">
+                        <span class="slds-icon_container slds-icon-utility-success">
+                            <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                        </span>
+                        <h2>Validation passed. Ready to start migration.</h2>
+                    </div>
+
+                    <p class="slds-m-bottom_medium">
+                        <strong>Source:</strong> {sourceObject}<br/>
+                        <strong>Target:</strong> {targetObject}
+                    </p>
+
+                    <lightning-button
+                        label="Start Migration"
+                        variant="brand"
+                        onclick={handleStartMigration}
+                        disabled={isLoading}
+                        class="slds-m-right_small">
+                    </lightning-button>
+                    <lightning-button
+                        label="Back"
+                        variant="neutral"
+                        onclick={handleBack}>
+                    </lightning-button>
+                </template>
+
+                <template if:false={validationSuccess}>
+                    <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                        <span class="slds-icon_container slds-icon-utility-error">
+                            <lightning-icon icon-name="utility:error" size="x-small"></lightning-icon>
+                        </span>
+                        <h2>Validation failed. Correct the errors below and try again.</h2>
+                    </div>
+
+                    <ul class="slds-m-bottom_medium">
+                        <template for:each={validationErrors} for:item="errMsg">
+                            <li key={errMsg} class="slds-text-color_error">{errMsg}</li>
+                        </template>
+                    </ul>
+
+                    <template if:true={hasWarnings}>
+                        <p class="slds-text-color_weak slds-m-bottom_small"><strong>Warnings:</strong></p>
+                        <ul class="slds-m-bottom_medium">
+                            <template for:each={validationWarnings} for:item="warnMsg">
+                                <li key={warnMsg}>{warnMsg}</li>
+                            </template>
+                        </ul>
+                    </template>
+
+                    <lightning-button
+                        label="Back"
+                        variant="neutral"
+                        onclick={handleBack}>
+                    </lightning-button>
+                </template>
+            </template>
+
+            <!-- ====================================================== -->
+            <!-- STEP 3: Migration initiated                             -->
+            <!-- ====================================================== -->
+            <template if:true={isStep3}>
+                <div class="slds-notify slds-notify_alert slds-alert_success slds-m-bottom_medium" role="alert">
+                    <span class="slds-icon_container slds-icon-utility-success">
+                        <lightning-icon icon-name="utility:success" size="x-small"></lightning-icon>
+                    </span>
+                    <h2>Migration initiated successfully.</h2>
+                </div>
+
+                <p class="slds-m-bottom_medium">
+                    The migration pipeline has been queued. Monitor progress in the
+                    <strong>ARM Migration Audit</strong> object.<br/>
+                    <strong>Audit Record ID:</strong> {auditRecordId}
+                </p>
+
+                <lightning-button
+                    label="Start New Migration"
+                    variant="neutral"
+                    onclick={handleReset}>
+                </lightning-button>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

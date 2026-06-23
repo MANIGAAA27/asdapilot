@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Source_Object__c</fullName>
+    <label>Source Object</label>
+    <description>API name of the source CPQ sObject (e.g., SBQQ__Quote__c). Used by MigrationValidator to verify field accessibility before transformation begins.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>true</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

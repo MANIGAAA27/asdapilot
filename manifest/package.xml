@@ -1,35 +1,37 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    <types>
-        <members>Account_Creation</members>
-        <name>Flow</name>
-    </types>
-    <types>
-        <members>Account_Creation_User</members>
-        <name>PermissionSet</name>
-    </types>
-           <types>
-        <members>Case.Last_Owner_Change_Timestamp__c</members>
-        <name>CustomField</name>
-    </types>    
   <types>
-    <members>CaseSummarizationService</members>
-    <members>SummarizationQueueable</members>
-    <members>CaseSummarizationServiceTest</members>
-    <members>SummarizationQueueableTest</members>
-    <members>caseTransferSummary</members>
-    <name>LightningComponentBundle</name>
-  </types>
-  <types>
-    <members>CaseTransferSummaryController</members>
-    <members>CaseTransferSummaryControllerTest</members>
+    <members>ARM_MigrationDomain</members>
+    <members>ARM_MigrationDomainTest</members>
+    <members>ARM_MigrationHandler</members>
+    <members>ARM_MigrationHandlerTest</members>
+    <members>ARM_MigrationService</members>
+    <members>ARM_MigrationServiceTest</members>
+    <members>DataTransformBatch</members>
+    <members>DataTransformBatchTest</members>
+    <members>MigrationProcessHandler</members>
+    <members>MigrationProcessHandlerTest</members>
+    <members>MigrationValidator</members>
+    <members>MigrationValidatorTest</members>
+    <members>ProcessQuoteTemplates</members>
+    <members>ProcessQuoteTemplatesTest</members>
     <name>ApexClass</name>
   </types>
   <types>
-    <members>Case_Transfer_Summary__c</members>
-    <members>Case_Transfer_Summary_Error__c</members>
-    <members>Case</members>
+    <members>migrationWizard</members>
+    <name>LightningComponentBundle</name>
+  </types>
+  <types>
+    <members>ARM_MigrationAudit__c</members>
+    <members>ARM_Object_Mapping__c</members>
+    <members>Migration_Log__c</members>
+    <members>SCPQ_ARM_TemplateCM__mdt</members>
+    <members>CustomMetadata__mdt</members>
     <name>CustomObject</name>
+  </types>
+  <types>
+    <members>ARM_MigrationTrigger</members>
+    <name>ApexTrigger</name>
   </types>
   <version>60.0</version>
 </Package>
