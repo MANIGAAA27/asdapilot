@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ERP_Order_ID__c</fullName>
+    <label>ERP Order ID</label>
+    <description>Unique identifier from the external ERP system. Used as external ID for upsert operations.</description>
+    <type>Text</type>
+    <length>50</length>
+    <required>true</required>
+    <externalId>true</externalId>
+    <unique>true</unique>
+</CustomField>

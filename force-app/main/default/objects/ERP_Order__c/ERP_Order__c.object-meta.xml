@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ERP Order</label>
+    <pluralLabel>ERP Orders</pluralLabel>
+    <description>Stores ERP order details synchronised from the external ERP system.</description>
+    <nameField>
+        <label>ERP Order Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>ERP-{0000000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ControlledByParent</sharingModel>
+    <enableActivities>true</enableActivities>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+</CustomObject>

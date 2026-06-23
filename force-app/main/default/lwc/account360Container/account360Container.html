@@ -1,0 +1,89 @@
+<template>
+    <lightning-card title="Account 360" icon-name="standard:account">
+        <div class="slds-card__body slds-card__body_inner">
+
+            <!-- Loading state -->
+            <template if:true={isLoading}>
+                <div class="slds-align_absolute-center slds-p-around_large">
+                    <lightning-spinner alternative-text="Loading Account 360 data..." size="medium"></lightning-spinner>
+                </div>
+            </template>
+
+            <!-- Error state -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <lightning-icon icon-name="utility:error" alternative-text="Error" size="small"></lightning-icon>
+                    <h2 class="slds-m-left_small">{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- Data state -->
+            <template if:true={hasData}>
+                <!-- Header with health score -->
+                <c-account360-header
+                    account-name={accountName}
+                    health-score={healthScore}
+                    onrefresh={handleRefresh}>
+                </c-account360-header>
+
+                <div class="slds-grid slds-wrap slds-m-top_medium">
+
+                    <!-- Opportunities section -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <c-account360-data-table
+                            title="Opportunities"
+                            icon-name="standard:opportunity"
+                            records={opportunities}
+                            columns={opportunityColumns}
+                            empty-message="No opportunities found for this account.">
+                        </c-account360-data-table>
+                    </div>
+
+                    <!-- Cases section -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <c-account360-data-table
+                            title="Cases"
+                            icon-name="standard:case"
+                            records={cases}
+                            columns={caseColumns}
+                            empty-message="No cases found for this account.">
+                        </c-account360-data-table>
+                    </div>
+
+                    <!-- Contracts section -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <c-account360-data-table
+                            title="Contracts"
+                            icon-name="standard:contract"
+                            records={contracts}
+                            columns={contractColumns}
+                            empty-message="No contracts found for this account.">
+                        </c-account360-data-table>
+                    </div>
+
+                    <!-- Invoices section -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <c-account360-data-table
+                            title="Invoices"
+                            icon-name="standard:financial_account"
+                            records={invoices}
+                            columns={invoiceColumns}
+                            empty-message="No invoices found for this account.">
+                        </c-account360-data-table>
+                    </div>
+
+                    <!-- ERP Orders section -->
+                    <div class="slds-col slds-size_1-of-1 slds-m-bottom_medium">
+                        <c-account360-erp-data
+                            record-id={recordId}
+                            erp-orders={erpOrders}>
+                        </c-account360-erp-data>
+                    </div>
+
+                </div>
+            </template>
+
+        </div>
+    </lightning-card>
+</template>

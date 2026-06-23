@@ -1,0 +1,337 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-23 — Project: Account 360 | CodeImplementation-Account360 | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Account Health Score Calculation</label>
+    <description>Record-triggered flow on Account that calculates and updates Health_Score__c after save. Starts at 100 and applies penalties for high-priority cases, overdue invoices, and past-due opportunities.</description>
+    <interviewLabel>Account Health Score Calculation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ============================================================ -->
+    <!-- VARIABLES — all grouped together                              -->
+    <!-- ============================================================ -->
+    <variables>
+        <name>healthScore</name>
+        <dataType>Number</dataType>
+        <scale>0</scale>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>firstHighPriorityCase</name>
+        <dataType>SObject</dataType>
+        <objectType>Case</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>firstOverdueInvoice</name>
+        <dataType>SObject</dataType>
+        <objectType>Invoice__c</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>firstOverdueOpp</name>
+        <dataType>SObject</dataType>
+        <objectType>Opportunity</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- ============================================================ -->
+    <!-- ASSIGNMENTS — all grouped together                            -->
+    <!-- ============================================================ -->
+    <assignments>
+        <name>SetBaseScore</name>
+        <label>Set Base Score to 100</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <assignmentItems>
+            <assignToReference>healthScore</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <numberValue>100</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>GetFirstHighPriorityCase</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>DeductCasePenalty</name>
+        <label>Deduct 20 Points for High Priority Case</label>
+        <locationX>440</locationX>
+        <locationY>268</locationY>
+        <assignmentItems>
+            <assignToReference>healthScore</assignToReference>
+            <operator>Subtract</operator>
+            <value>
+                <numberValue>20</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>GetFirstOverdueInvoice</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>DeductInvoicePenalty</name>
+        <label>Deduct 15 Points for Overdue Invoice</label>
+        <locationX>440</locationX>
+        <locationY>536</locationY>
+        <assignmentItems>
+            <assignToReference>healthScore</assignToReference>
+            <operator>Subtract</operator>
+            <value>
+                <numberValue>15</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>GetFirstOverdueOpp</targetReference>
+        </connector>
+    </assignments>
+    <assignments>
+        <name>DeductOppPenalty</name>
+        <label>Deduct 10 Points for Overdue Opportunity</label>
+        <locationX>440</locationX>
+        <locationY>804</locationY>
+        <assignmentItems>
+            <assignToReference>healthScore</assignToReference>
+            <operator>Subtract</operator>
+            <value>
+                <numberValue>10</numberValue>
+            </value>
+        </assignmentItems>
+        <connector>
+            <targetReference>UpdateAccountHealthScore</targetReference>
+        </connector>
+    </assignments>
+
+    <!-- ============================================================ -->
+    <!-- DECISIONS — all grouped together                              -->
+    <!-- ============================================================ -->
+    <decisions>
+        <name>CheckCaseExists</name>
+        <label>High Priority Case Found?</label>
+        <locationX>312</locationX>
+        <locationY>268</locationY>
+        <defaultConnector>
+            <targetReference>GetFirstOverdueInvoice</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Case Found</defaultConnectorLabel>
+        <rules>
+            <name>CaseFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>firstHighPriorityCase</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>DeductCasePenalty</targetReference>
+            </connector>
+            <label>Case Found</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>CheckInvoiceExists</name>
+        <label>Overdue Invoice Found?</label>
+        <locationX>312</locationX>
+        <locationY>536</locationY>
+        <defaultConnector>
+            <targetReference>GetFirstOverdueOpp</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Invoice Found</defaultConnectorLabel>
+        <rules>
+            <name>InvoiceFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>firstOverdueInvoice</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>DeductInvoicePenalty</targetReference>
+            </connector>
+            <label>Invoice Found</label>
+        </rules>
+    </decisions>
+    <decisions>
+        <name>CheckOppExists</name>
+        <label>Overdue Opportunity Found?</label>
+        <locationX>312</locationX>
+        <locationY>804</locationY>
+        <defaultConnector>
+            <targetReference>UpdateAccountHealthScore</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Overdue Opp Found</defaultConnectorLabel>
+        <rules>
+            <name>OppFound</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>firstOverdueOpp</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>DeductOppPenalty</targetReference>
+            </connector>
+            <label>Opp Found</label>
+        </rules>
+    </decisions>
+
+    <!-- ============================================================ -->
+    <!-- RECORD LOOKUPS — all grouped together                         -->
+    <!-- ============================================================ -->
+    <recordLookups>
+        <name>GetFirstHighPriorityCase</name>
+        <label>Get First High Priority Open Case</label>
+        <locationX>176</locationX>
+        <locationY>268</locationY>
+        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CheckCaseExists</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Priority</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>High</stringValue>
+            </value>
+        </filters>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Case</object>
+        <outputReference>firstHighPriorityCase</outputReference>
+        <queriedFields>Id</queriedFields>
+    </recordLookups>
+    <recordLookups>
+        <name>GetFirstOverdueInvoice</name>
+        <label>Get First Overdue Invoice</label>
+        <locationX>176</locationX>
+        <locationY>536</locationY>
+        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CheckInvoiceExists</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Account__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Overdue</stringValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Invoice__c</object>
+        <outputReference>firstOverdueInvoice</outputReference>
+        <queriedFields>Id</queriedFields>
+    </recordLookups>
+    <recordLookups>
+        <name>GetFirstOverdueOpp</name>
+        <label>Get First Past-Due Opportunity</label>
+        <locationX>176</locationX>
+        <locationY>804</locationY>
+        <assignNullValuesIfNoRecordsFound>true</assignNullValuesIfNoRecordsFound>
+        <connector>
+            <targetReference>CheckOppExists</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>AccountId</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>CloseDate</field>
+            <operator>LessThan</operator>
+            <value>
+                <elementReference>$Flow.CurrentDate</elementReference>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>Opportunity</object>
+        <outputReference>firstOverdueOpp</outputReference>
+        <queriedFields>Id</queriedFields>
+    </recordLookups>
+
+    <!-- ============================================================ -->
+    <!-- RECORD UPDATES                                                -->
+    <!-- ============================================================ -->
+    <recordUpdates>
+        <name>UpdateAccountHealthScore</name>
+        <label>Update Account Health Score</label>
+        <locationX>176</locationX>
+        <locationY>938</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Health_Score__c</field>
+            <value>
+                <elementReference>healthScore</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Account</object>
+    </recordUpdates>
+
+    <!-- ============================================================ -->
+    <!-- START                                                         -->
+    <!-- ============================================================ -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>Account</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>SetBaseScore</targetReference>
+        </connector>
+    </start>
+</Flow>
