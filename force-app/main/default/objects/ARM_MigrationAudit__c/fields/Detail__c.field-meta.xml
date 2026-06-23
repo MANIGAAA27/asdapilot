@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Detail__c</fullName>
+    <label>Detail</label>
+    <description>Contains JSON-formatted metadata about the migration event — includes source object API name, field mapping snapshot, and transformation parameters used during execution.</description>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+</CustomField>

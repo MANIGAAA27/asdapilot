@@ -2,10 +2,14 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": true
+      "default": true,
+      "package": "sfdx-project",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT"
     }
   ],
-  "namespace": "",
-  "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "60.0"
+  "name": "sfdx-project",
+  "namespace": "sbqq",
+  "sourceApiVersion": "60.0",
+  "sfdcLoginUrl": "https://login.salesforce.com"
 }

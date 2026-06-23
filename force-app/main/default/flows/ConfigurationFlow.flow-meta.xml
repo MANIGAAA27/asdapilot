@@ -1,0 +1,255 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-23 — Project: Salesforce CPQ to Salesforce Salesforce Agentforce Revenue Management (ARM) | LLD-SalesforceCPQtoSalesforceSalesforceAgentforceRevenueManagementARM-1 (BR1-BR2) | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Configuration Flow</label>
+    <description>Screen Flow for validation and status update during migration initiation. Guides the migration administrator through entering source and target object names, runs MigrationValidator pre-flight checks, and creates a Migration_Log__c record when validation passes.</description>
+    <interviewLabel>Configuration Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>Flow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ============================================================ -->
+    <!-- START — first node is the configuration input screen          -->
+    <!-- ============================================================ -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>ConfigureScreen</targetReference>
+        </connector>
+    </start>
+
+    <!-- ============================================================ -->
+    <!-- VARIABLES                                                     -->
+    <!-- ============================================================ -->
+    <variables>
+        <name>varSourceObject</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varTargetObject</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varIsValid</name>
+        <dataType>Boolean</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varErrorSummary</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>varCreatedLogId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 1: Configuration Input                                 -->
+    <!-- ============================================================ -->
+    <screens>
+        <name>ConfigureScreen</name>
+        <label>Configure Migration</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>ValidateMigrationConfig</targetReference>
+        </connector>
+        <fields>
+            <name>introText</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;Enter the API names for the source CPQ object and target ARM object to validate your migration configuration before proceeding.&lt;/p&gt;</fieldText>
+        </fields>
+        <fields>
+            <name>sourceObjectInput</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+        </fields>
+        <fields>
+            <name>targetObjectInput</name>
+            <fieldType>InputField</fieldType>
+            <dataType>String</dataType>
+            <isRequired>true</isRequired>
+        </fields>
+    </screens>
+
+    <!-- ============================================================ -->
+    <!-- ACTION CALL: Validate via MigrationValidator @InvocableMethod -->
+    <!-- ============================================================ -->
+    <actionCalls>
+        <name>ValidateMigrationConfig</name>
+        <label>Validate Migration Configuration</label>
+        <locationX>176</locationX>
+        <locationY>268</locationY>
+        <actionName>MigrationValidator</actionName>
+        <actionType>apex</actionType>
+        <connector>
+            <targetReference>ValidationDecision</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>ErrorScreen</targetReference>
+        </faultConnector>
+        <inputParameters>
+            <name>sourceObjectName</name>
+            <value>
+                <elementReference>sourceObjectInput</elementReference>
+            </value>
+        </inputParameters>
+        <inputParameters>
+            <name>targetObjectName</name>
+            <value>
+                <elementReference>targetObjectInput</elementReference>
+            </value>
+        </inputParameters>
+        <outputParameters>
+            <assignToReference>varIsValid</assignToReference>
+            <name>isValid</name>
+        </outputParameters>
+        <outputParameters>
+            <assignToReference>varErrorSummary</assignToReference>
+            <name>errorSummary</name>
+        </outputParameters>
+    </actionCalls>
+
+    <!-- ============================================================ -->
+    <!-- DECISION: Branch on validation result                         -->
+    <!-- ============================================================ -->
+    <decisions>
+        <name>ValidationDecision</name>
+        <label>Validation Passed?</label>
+        <locationX>312</locationX>
+        <locationY>402</locationY>
+        <defaultConnector>
+            <targetReference>ErrorScreen</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Validation Failed</defaultConnectorLabel>
+        <rules>
+            <name>ValidationPassed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>varIsValid</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>true</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>ConfirmScreen</targetReference>
+            </connector>
+            <label>Validation Passed</label>
+        </rules>
+    </decisions>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 2a: Validation Error                                   -->
+    <!-- ============================================================ -->
+    <screens>
+        <name>ErrorScreen</name>
+        <label>Validation Errors</label>
+        <locationX>448</locationX>
+        <locationY>536</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>ConfigureScreen</targetReference>
+        </connector>
+        <fields>
+            <name>errorText</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;&lt;b&gt;Validation failed. Please review the errors below and correct your configuration.&lt;/b&gt;&lt;/p&gt;&lt;p&gt;{!varErrorSummary}&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 2b: Confirm                                            -->
+    <!-- ============================================================ -->
+    <screens>
+        <name>ConfirmScreen</name>
+        <label>Confirm Migration</label>
+        <locationX>176</locationX>
+        <locationY>536</locationY>
+        <allowBack>true</allowBack>
+        <allowFinish>false</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <connector>
+            <targetReference>CreateMigrationLog</targetReference>
+        </connector>
+        <fields>
+            <name>confirmText</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;Validation passed. Click &lt;b&gt;Next&lt;/b&gt; to initiate the migration from &lt;b&gt;{!sourceObjectInput}&lt;/b&gt; to &lt;b&gt;{!targetObjectInput}&lt;/b&gt;.&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+
+    <!-- ============================================================ -->
+    <!-- RECORD CREATE: Create Migration_Log__c to initiate pipeline   -->
+    <!-- ============================================================ -->
+    <recordCreates>
+        <name>CreateMigrationLog</name>
+        <label>Create Migration Log</label>
+        <locationX>176</locationX>
+        <locationY>670</locationY>
+        <assignRecordIdToReference>varCreatedLogId</assignRecordIdToReference>
+        <connector>
+            <targetReference>SuccessScreen</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>MigrationStatus__c</field>
+            <value>
+                <stringValue>Pending</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>MigrationDate__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDate</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Migration_Log__c</object>
+    </recordCreates>
+
+    <!-- ============================================================ -->
+    <!-- SCREEN 3: Success                                             -->
+    <!-- ============================================================ -->
+    <screens>
+        <name>SuccessScreen</name>
+        <label>Migration Initiated</label>
+        <locationX>176</locationX>
+        <locationY>804</locationY>
+        <allowBack>false</allowBack>
+        <allowFinish>true</allowFinish>
+        <allowPause>false</allowPause>
+        <showFooter>true</showFooter>
+        <showHeader>true</showHeader>
+        <fields>
+            <name>successText</name>
+            <fieldType>DisplayText</fieldType>
+            <fieldText>&lt;p&gt;Migration log created successfully. Log ID: &lt;b&gt;{!varCreatedLogId}&lt;/b&gt;&lt;/p&gt;&lt;p&gt;The transformation pipeline has been initiated. Monitor progress in the Migration Log object.&lt;/p&gt;</fieldText>
+        </fields>
+    </screens>
+</Flow>

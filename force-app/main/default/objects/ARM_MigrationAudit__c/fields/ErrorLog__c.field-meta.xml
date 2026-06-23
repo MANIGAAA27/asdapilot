@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>ErrorLog__c</fullName>
+    <label>Error Log</label>
+    <description>Logs detailed error information in serialized format. Captures stack traces, failed record IDs, and DML exception details accumulated during batch or service execution.</description>
+    <type>LongTextArea</type>
+    <length>32768</length>
+    <visibleLines>5</visibleLines>
+    <required>false</required>
+</CustomField>

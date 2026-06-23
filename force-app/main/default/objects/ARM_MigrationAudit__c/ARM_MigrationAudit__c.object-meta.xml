@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ARM Migration Audit</label>
+    <pluralLabel>ARM Migration Audits</pluralLabel>
+    <description>Custom object for tracking migration audit logs. Each record represents a single asynchronous CPQ-to-ARM migration run, capturing status, timestamps, CPQ record scope, and any error messages.</description>
+    <nameField>
+        <label>Audit Number</label>
+        <type>AutoNumber</type>
+        <displayFormat>AUD-{000000}</displayFormat>
+        <startingNumber>1</startingNumber>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <enableActivities>false</enableActivities>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+</CustomObject>

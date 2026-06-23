@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-23 — Project: Salesforce CPQ to Salesforce Salesforce Agentforce Revenue Management (ARM) | LLD-SalesforceCPQtoSalesforceSalesforceAgentforceRevenueManagementARM-1 (BR1-BR2) | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Migration Status Flow</label>
+    <description>Record-triggered flow for managing migration status updates and failure handling. Fires after an ARM_MigrationAudit__c record is updated. When Status transitions to Failed, creates a Migration_Log__c failure record for downstream audit trail visibility.</description>
+    <interviewLabel>Migration Status Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ============================================================ -->
+    <!-- START — Record-Triggered on ARM_MigrationAudit__c Update     -->
+    <!-- Filter: Status__c = 'Failed'                                 -->
+    <!-- ============================================================ -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>StatusDecision</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Failed</stringValue>
+            </value>
+        </filters>
+        <object>ARM_MigrationAudit__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+
+    <!-- ============================================================ -->
+    <!-- VARIABLES                                                     -->
+    <!-- ============================================================ -->
+    <variables>
+        <name>varAuditError</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <!-- ============================================================ -->
+    <!-- DECISION: Confirm status is Failed before creating log entry  -->
+    <!-- ============================================================ -->
+    <decisions>
+        <name>StatusDecision</name>
+        <label>Is Status Failed?</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <defaultConnector>
+            <targetReference>NoActionAssignment</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not Failed</defaultConnectorLabel>
+        <rules>
+            <name>IsFailed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Status__c</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Failed</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>CreateFailureLog</targetReference>
+            </connector>
+            <label>Failed</label>
+        </rules>
+    </decisions>
+
+    <!-- ============================================================ -->
+    <!-- ASSIGNMENT: No-op terminal for non-Failed path                -->
+    <!-- ============================================================ -->
+    <assignments>
+        <name>NoActionAssignment</name>
+        <label>No Action Required</label>
+        <locationX>312</locationX>
+        <locationY>268</locationY>
+        <assignmentItems>
+            <assignToReference>varAuditError</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>Status not Failed; no log created.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <!-- ============================================================ -->
+    <!-- RECORD CREATE: Log failure in Migration_Log__c                -->
+    <!-- ============================================================ -->
+    <recordCreates>
+        <name>CreateFailureLog</name>
+        <label>Create Failure Log</label>
+        <locationX>176</locationX>
+        <locationY>268</locationY>
+        <inputAssignments>
+            <field>MigrationStatus__c</field>
+            <value>
+                <stringValue>Failed</stringValue>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>MigrationDate__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDate</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>ErrorMessage__c</field>
+            <value>
+                <elementReference>$Record.Error_Message__c</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Migration_Log__c</object>
+    </recordCreates>
+</Flow>
