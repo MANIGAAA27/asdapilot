@@ -1,0 +1,43 @@
+<template>
+    <div class="slds-box slds-theme_shade slds-m-bottom_medium">
+        <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+
+            <!-- Account name -->
+            <div class="slds-col">
+                <h1 class="slds-text-heading_large">{accountName}</h1>
+            </div>
+
+            <!-- Health score badge -->
+            <div class="slds-col slds-text-align_right">
+                <div class="slds-grid slds-grid_vertical-align-center">
+                    <span class="slds-m-right_small slds-text-title_caps slds-text-color_weak">Health Score</span>
+                    <lightning-badge
+                        label={healthScoreLabel}
+                        class={healthBadgeClass}>
+                    </lightning-badge>
+                </div>
+            </div>
+
+            <!-- Refresh button -->
+            <div class="slds-col slds-no-flex slds-m-left_small">
+                <lightning-button-icon
+                    icon-name="utility:refresh"
+                    alternative-text="Refresh Account 360"
+                    title="Refresh"
+                    onclick={handleRefreshClick}>
+                </lightning-button-icon>
+            </div>
+
+        </div>
+
+        <!-- Health status bar -->
+        <div class="slds-m-top_small">
+            <div class="health-bar-container">
+                <div class={healthBarClass} style={healthBarStyle}></div>
+            </div>
+            <p class="slds-text-body_small slds-m-top_xx-small">
+                Status: <strong>{healthStatusLabel}</strong> ({healthScore}/100)
+            </p>
+        </div>
+    </div>
+</template>
