@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-24 — Project: Agent Console Workspace | CodeImplementation-AgentConsoleWorkspace | ASDA -->
+<!-- Project: Agent Console Workspace | LLD-AgentConsoleWorkspace | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Resolution Time Calculation</label>
+    <description>Record-triggered flow that calculates and stamps Resolution_Time_Minutes__c on the Case when Status changes to Closed. Supports Average Handle Time (AHT) reporting for the Agent Console Workspace feature.</description>
+    <interviewLabel>Case Resolution Time Calculation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <object>Case</object>
+        <recordTriggerType>CreateAndUpdate</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <connector>
+            <targetReference>CheckPriorStatus</targetReference>
+        </connector>
+    </start>
+
+    <decisions>
+        <name>CheckPriorStatus</name>
+        <label>Was Case Just Closed?</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <defaultConnector>
+            <targetReference>DoNothing</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Already Was Closed</defaultConnectorLabel>
+        <rules>
+            <name>JustClosed</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record__Prior.IsClosed</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>StampResolutionTime</targetReference>
+            </connector>
+            <label>Just Closed</label>
+        </rules>
+    </decisions>
+
+    <recordUpdates>
+        <name>StampResolutionTime</name>
+        <label>Stamp Resolution Time Minutes</label>
+        <locationX>312</locationX>
+        <locationY>268</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Resolution_Time_Minutes__c</field>
+            <value>
+                <elementReference>ResolutionTimeMinutes</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+
+    <assignments>
+        <name>DoNothing</name>
+        <label>Do Nothing</label>
+        <locationX>50</locationX>
+        <locationY>268</locationY>
+        <assignmentItems>
+            <assignToReference>TempVar</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue></stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <formulas>
+        <name>ResolutionTimeMinutes</name>
+        <dataType>Number</dataType>
+        <scale>0</scale>
+        <expression>ROUND(({!$Record.ClosedDate} - {!$Record.CreatedDate}) * 1440, 0)</expression>
+    </formulas>
+
+    <variables>
+        <name>TempVar</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+</Flow>
