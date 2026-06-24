@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Agent Console Workspace User</label>
+    <description>Grants access to the Agent Console Workspace LWC and all associated data for Service Managers and Support Agents. Includes Apex class access, Case_Recommendation__c object CRUD, and custom Case field visibility.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- ── Apex class access ──────────────────────────────────────────── -->
+    <classAccesses>
+        <apexClass>AgentConsoleWorkspaceService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- ── Object CRUD — Case_Recommendation__c ─────────────────────── -->
+    <objectPermissions>
+        <object>Case_Recommendation__c</object>
+        <allowCreate>false</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- ── Field permissions — Case custom fields ────────────────────── -->
+    <fieldPermissions>
+        <field>Case.Workspace_Used__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case.Workspace_Opened_At__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+
+    <!-- ── Field permissions — Case_Recommendation__c fields ─────────── -->
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Case__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Recommended_Resolution__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Confidence_Score__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.AI_Source__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Status__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+</PermissionSet>
