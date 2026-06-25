@@ -1,34 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Package xmlns="http://soap.sforce.com/2006/04/metadata">
-    <types>
-        <members>Account_Creation</members>
-        <name>Flow</name>
-    </types>
-    <types>
-        <members>Account_Creation_User</members>
-        <name>PermissionSet</name>
-    </types>
-           <types>
-        <members>Case.Last_Owner_Change_Timestamp__c</members>
-        <name>CustomField</name>
-    </types>    
   <types>
-    <members>CaseSummarizationService</members>
-    <members>SummarizationQueueable</members>
-    <members>CaseSummarizationServiceTest</members>
-    <members>SummarizationQueueableTest</members>
-    <members>caseTransferSummary</members>
-    <name>LightningComponentBundle</name>
-  </types>
-  <types>
-    <members>CaseTransferSummaryController</members>
-    <members>CaseTransferSummaryControllerTest</members>
+    <members>AgentConsoleWorkspaceService</members>
     <name>ApexClass</name>
   </types>
   <types>
-    <members>Case_Transfer_Summary__c</members>
-    <members>Case_Transfer_Summary_Error__c</members>
+    <members>agentConsoleWorkspace</members>
+    <name>LightningComponentBundle</name>
+  </types>
+  <types>
+    <members>Case_Recommendation__c</members>
     <members>Case</members>
+    <members>CustomMetadata__mdt</members>
     <name>CustomObject</name>
   </types>
   <version>60.0</version>
