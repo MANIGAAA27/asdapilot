@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workspace_Used__c</fullName>
+    <label>Workspace Used</label>
+    <description>Set to true by the Agent Console Workspace LWC when the component loads, indicating the agent used the workspace to handle this case.</description>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+</CustomField>

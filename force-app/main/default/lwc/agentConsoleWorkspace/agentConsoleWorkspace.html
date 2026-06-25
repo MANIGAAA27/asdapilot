@@ -1,0 +1,299 @@
+<template>
+    <lightning-card title="Agent Console Workspace" icon-name="standard:case">
+        <div class="slds-p-around_medium">
+
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading workspace..." size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Error banner -->
+            <template if:true={hasError}>
+                <div class="slds-notify slds-notify_alert slds-theme_alert-texture slds-theme_error"
+                     role="alert">
+                    <span class="slds-assistive-text">error</span>
+                    <h2>{errorMessage}</h2>
+                </div>
+            </template>
+
+            <!-- SLA Countdown Banner (always visible when milestones exist) -->
+            <template if:true={hasMilestones}>
+                <div class="slds-box slds-box_x-small slds-m-bottom_medium slds-theme_shade">
+                    <div class="slds-grid slds-grid_align-spread slds-grid_vertical-align-center">
+                        <div class="slds-col">
+                            <lightning-icon icon-name="utility:clock"
+                                            size="small"
+                                            class="slds-m-right_x-small">
+                            </lightning-icon>
+                            <strong>SLA: </strong>
+                            <span>{nextMilestoneName}</span>
+                        </div>
+                        <div class="slds-col slds-text-align_right">
+                            <span class={slaCountdownClass}>{slaCountdownDisplay}</span>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Main tabset — only rendered after initial load -->
+            <template if:false={isLoading}>
+                <lightning-tabset>
+
+                    <!-- Tab 1: Case Overview + Customer Profile -->
+                    <lightning-tab label="Case Overview" value="overview">
+                        <template if:true={caseDetails}>
+                            <!-- Case Core Fields -->
+                            <div class="slds-m-bottom_medium">
+                                <h3 class="slds-text-heading_small slds-p-bottom_x-small
+                                           slds-border_bottom slds-m-bottom_small">
+                                    Case Details
+                                </h3>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                                        <dl class="slds-dl_horizontal">
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Case #</dt>
+                                            <dd class="slds-dl_horizontal__detail">{caseNumber}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Status</dt>
+                                            <dd class="slds-dl_horizontal__detail">{caseStatus}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Priority</dt>
+                                            <dd class="slds-dl_horizontal__detail">{casePriority}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Origin</dt>
+                                            <dd class="slds-dl_horizontal__detail">{caseOrigin}</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <dl class="slds-dl_horizontal">
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Subject</dt>
+                                            <dd class="slds-dl_horizontal__detail">{caseSubject}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Escalated</dt>
+                                            <dd class="slds-dl_horizontal__detail">
+                                                {isEscalatedDisplay}
+                                            </dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Created</dt>
+                                            <dd class="slds-dl_horizontal__detail">
+                                                <lightning-formatted-date-time
+                                                    value={caseCreatedDate}
+                                                    year="numeric"
+                                                    month="short"
+                                                    day="2-digit"
+                                                    hour="2-digit"
+                                                    minute="2-digit">
+                                                </lightning-formatted-date-time>
+                                            </dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                                <template if:true={caseDescription}>
+                                    <p class="slds-m-top_small slds-text-color_weak
+                                               slds-text-title_caps">Description</p>
+                                    <p class="slds-m-top_xx-small">{caseDescription}</p>
+                                </template>
+                            </div>
+
+                            <!-- Customer Profile -->
+                            <div>
+                                <h3 class="slds-text-heading_small slds-p-bottom_x-small
+                                           slds-border_bottom slds-m-bottom_small">
+                                    Customer Profile
+                                </h3>
+                                <div class="slds-grid slds-wrap">
+                                    <div class="slds-col slds-size_1-of-2 slds-p-right_small">
+                                        <dl class="slds-dl_horizontal">
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Account</dt>
+                                            <dd class="slds-dl_horizontal__detail">{accountName}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Contact</dt>
+                                            <dd class="slds-dl_horizontal__detail">{contactName}</dd>
+                                        </dl>
+                                    </div>
+                                    <div class="slds-col slds-size_1-of-2">
+                                        <dl class="slds-dl_horizontal">
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Email</dt>
+                                            <dd class="slds-dl_horizontal__detail">{contactEmail}</dd>
+                                            <dt class="slds-dl_horizontal__label
+                                                       slds-text-color_weak">Phone</dt>
+                                            <dd class="slds-dl_horizontal__detail">{contactPhone}</dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </lightning-tab>
+
+                    <!-- Tab 2: Previous Interactions -->
+                    <lightning-tab label="Previous Interactions" value="interactions">
+                        <template if:true={isInteractionsLoading}>
+                            <lightning-spinner alternative-text="Loading interactions..."
+                                               size="small">
+                            </lightning-spinner>
+                        </template>
+                        <template if:false={isInteractionsLoading}>
+                            <template if:true={hasInteractions}>
+                                <table class="slds-table slds-table_cell-buffer
+                                              slds-table_bordered slds-table_striped"
+                                       role="grid">
+                                    <thead>
+                                        <tr class="slds-line-height_reset">
+                                            <th scope="col">
+                                                <div class="slds-truncate">Type</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate">Subject</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate">Status</div>
+                                            </th>
+                                            <th scope="col">
+                                                <div class="slds-truncate">Date</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <template for:each={interactions} for:item="item">
+                                            <tr key={item.uniqueKey}>
+                                                <td>
+                                                    <lightning-badge label={item.recordType}>
+                                                    </lightning-badge>
+                                                </td>
+                                                <td>
+                                                    <div class="slds-truncate"
+                                                         title={item.subject}>
+                                                        {item.subject}
+                                                    </div>
+                                                    <template if:true={item.caseNumber}>
+                                                        <span class="slds-text-color_weak">
+                                                            #{item.caseNumber}
+                                                        </span>
+                                                    </template>
+                                                </td>
+                                                <td>{item.status}</td>
+                                                <td>
+                                                    <lightning-formatted-date-time
+                                                        value={item.activityDate}
+                                                        year="numeric"
+                                                        month="short"
+                                                        day="2-digit">
+                                                    </lightning-formatted-date-time>
+                                                </td>
+                                            </tr>
+                                        </template>
+                                    </tbody>
+                                </table>
+                            </template>
+                            <template if:false={hasInteractions}>
+                                <p class="slds-p-around_medium slds-text-color_weak
+                                          slds-text-align_center">
+                                    No previous interactions found.
+                                </p>
+                            </template>
+                        </template>
+                    </lightning-tab>
+
+                    <!-- Tab 3: AI Recommendations -->
+                    <lightning-tab label="AI Recommendations" value="recommendations">
+                        <template if:true={hasRecommendations}>
+                            <template for:each={recommendations} for:item="rec">
+                                <div key={rec.Id} class="slds-box slds-m-bottom_small">
+                                    <div class="slds-grid slds-grid_align-spread
+                                                slds-m-bottom_x-small">
+                                        <div class="slds-col">
+                                            <lightning-badge label={rec.Source__c}
+                                                            class="slds-m-right_x-small">
+                                            </lightning-badge>
+                                            <template if:true={rec.Confidence_Score__c}>
+                                                <span class="slds-text-color_weak
+                                                             slds-text-body_small">
+                                                    Confidence: {rec.Confidence_Score__c}%
+                                                </span>
+                                            </template>
+                                        </div>
+                                    </div>
+                                    <p class="slds-text-heading_small slds-m-bottom_xx-small">
+                                        {rec.Recommendation_Text__c}
+                                    </p>
+                                    <template if:true={rec.Recommended_Resolution__c}>
+                                        <p class="slds-text-color_weak slds-text-body_small">
+                                            {rec.Recommended_Resolution__c}
+                                        </p>
+                                    </template>
+                                </div>
+                            </template>
+                        </template>
+                        <template if:false={hasRecommendations}>
+                            <p class="slds-p-around_medium slds-text-color_weak
+                                      slds-text-align_center">
+                                No AI recommendations available for this case.
+                            </p>
+                        </template>
+                    </lightning-tab>
+
+                    <!-- Tab 4: SLA Milestones -->
+                    <lightning-tab label="SLA Milestones" value="sla">
+                        <template if:true={hasMilestones}>
+                            <table class="slds-table slds-table_cell-buffer slds-table_bordered"
+                                   role="grid">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">
+                                            <div class="slds-truncate">Milestone</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="slds-truncate">Target Date</div>
+                                        </th>
+                                        <th scope="col">
+                                            <div class="slds-truncate">Status</div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <template for:each={milestones} for:item="ms">
+                                        <tr key={ms.Id}>
+                                            <td>{ms.MilestoneType.Name}</td>
+                                            <td>
+                                                <lightning-formatted-date-time
+                                                    value={ms.TargetDate}
+                                                    year="numeric"
+                                                    month="short"
+                                                    day="2-digit"
+                                                    hour="2-digit"
+                                                    minute="2-digit">
+                                                </lightning-formatted-date-time>
+                                            </td>
+                                            <td>
+                                                <template if:true={ms.IsViolated}>
+                                                    <lightning-badge label="Violated">
+                                                    </lightning-badge>
+                                                </template>
+                                                <template if:false={ms.IsViolated}>
+                                                    <lightning-badge label="Active">
+                                                    </lightning-badge>
+                                                </template>
+                                            </td>
+                                        </tr>
+                                    </template>
+                                </tbody>
+                            </table>
+                        </template>
+                        <template if:false={hasMilestones}>
+                            <p class="slds-p-around_medium slds-text-color_weak
+                                      slds-text-align_center">
+                                No active SLA milestones for this case.
+                            </p>
+                        </template>
+                    </lightning-tab>
+
+                </lightning-tabset>
+            </template>
+        </div>
+    </lightning-card>
+</template>

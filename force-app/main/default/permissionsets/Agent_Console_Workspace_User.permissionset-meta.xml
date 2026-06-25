@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Agent Console Workspace User</label>
+    <description>Grants Service Managers and Support Agents access to the Agent Console Workspace. Includes read/write on Case custom fields, CRUD on Case_Recommendation__c, and access to AgentConsoleWorkspaceService.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- Apex Class Access -->
+    <classAccesses>
+        <apexClass>AgentConsoleWorkspaceService</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- Object Permissions -->
+    <objectPermissions>
+        <object>Case_Recommendation__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>false</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Field Permissions — Case custom fields -->
+    <fieldPermissions>
+        <field>Case.Workspace_Used__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case.Workspace_Opened_At__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case.Resolution_Time_Minutes__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+
+    <!-- Field Permissions — Case_Recommendation__c -->
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Case__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Recommendation_Text__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Recommended_Resolution__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Confidence_Score__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>Case_Recommendation__c.Source__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+</PermissionSet>
