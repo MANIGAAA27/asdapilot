@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workspace_Opened_At__c</fullName>
+    <label>Workspace Opened At</label>
+    <description>DateTime stamped when the Agent Console Workspace LWC loads for this Case. Used alongside Workspace_Used__c for reporting on agent productivity and handling time analysis.</description>
+    <type>DateTime</type>
+</CustomField>
