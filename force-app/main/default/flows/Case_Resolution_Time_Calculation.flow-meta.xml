@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-25 — Project: Agent Console Workspace | CodeImplementation-AgentConsoleWorkspace | ASDA -->
+<!-- Project: Agent Console Workspace | LLD-AgentConsoleWorkspace | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Resolution Time Calculation</label>
+    <description>Record-triggered before-save flow on Case. When a Case is updated and IsClosed becomes true and Resolution_Time_Minutes__c has not yet been set, calculates the elapsed minutes between CreatedDate and ClosedDate and stamps Resolution_Time_Minutes__c for AHT reporting.</description>
+    <interviewLabel>Case Resolution Time Calculation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- START: RecordBeforeSave so $Record fields can be stamped directly.
+         Entry criteria: IsClosed = true AND Resolution_Time_Minutes__c null
+         (prevents re-calculation on subsequent saves of an already-closed Case). -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>Case</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordBeforeSave</triggerType>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>IsClosed</field>
+            <operator>EqualTo</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>Resolution_Time_Minutes__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>true</booleanValue>
+            </value>
+        </filters>
+        <connector>
+            <targetReference>StampResolutionTime</targetReference>
+        </connector>
+    </start>
+
+    <!-- FORMULA: DateTime subtraction yields fractional days; x1440 = minutes. -->
+    <formulas>
+        <name>ResolutionMinutes</name>
+        <dataType>Number</dataType>
+        <expression>ROUND(({!$Record.ClosedDate} - {!$Record.CreatedDate}) * 1440, 0)</expression>
+        <scale>0</scale>
+    </formulas>
+
+    <!-- ASSIGNMENT: stamp $Record.Resolution_Time_Minutes__c before the record is saved. -->
+    <assignments>
+        <name>StampResolutionTime</name>
+        <label>Stamp Resolution Time</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <assignmentItems>
+            <assignToReference>$Record.Resolution_Time_Minutes__c</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <elementReference>ResolutionMinutes</elementReference>
+            </value>
+        </assignmentItems>
+    </assignments>
+</Flow>
