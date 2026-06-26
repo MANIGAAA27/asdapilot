@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Package xmlns="http://soap.sforce.com/2006/04/metadata">
+    <types>
+        <members>Case</members>
+        <members>Case_Recommendation__c</members>
+        <members>CustomMetadata__mdt</members>
+        <name>CustomObject</name>
+    </types>
+    <types>
+        <members>Case.Workspace_Opened_At__c</members>
+        <members>Case.Workspace_Used__c</members>
+        <name>CustomField</name>
+    </types>
+    <types>
+        <members>Case_Resolution_Time_Calculation</members>
+        <name>Flow</name>
+    </types>
+    <types>
+        <members>Agent_Console_Workspace_User</members>
+        <name>PermissionSet</name>
+    </types>
+    <types>
+        <members>agentConsoleWorkspace</members>
+        <name>LightningComponentBundle</name>
+    </types>
+    <types>
+        <members>AgentConsoleWorkspaceService</members>
+        <members>AgentConsoleWorkspaceServiceTest</members>
+        <name>ApexClass</name>
+    </types>
+    <version>62.0</version>
+</Package>
