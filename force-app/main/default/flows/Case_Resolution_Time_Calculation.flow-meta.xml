@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- MODIFIED 2026-06-26 — Project: Agent Console Workspace | LLD-AgentConsoleWorkspace | ASDA -->
+<!-- Project: Agent Console Workspace | LLD-AgentConsoleWorkspace | ASDA -->
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Case Resolution Time Calculation</label>
+    <description>Record-triggered flow that calculates and stamps Resolution_Time_Minutes__c on a Case when its Status changes to a closed state (IsClosed = true). Computes minutes elapsed from CreatedDate to ClosedDate to support Average Handle Time (AHT) reporting.</description>
+    <interviewLabel>Case Resolution Time Calculation {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- ================================================================ -->
+    <!-- START — RecordAfterSave trigger on Case Update                    -->
+    <!-- Fires when a Case is updated AND IsClosed has changed to true.    -->
+    <!-- ================================================================ -->
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <object>Case</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+        <filterFormula>AND(
+    {!$Record.IsClosed} = TRUE,
+    ISCHANGED({!$Record.IsClosed})
+)</filterFormula>
+        <connector>
+            <targetReference>CheckResolutionAlreadySet</targetReference>
+        </connector>
+    </start>
+
+    <!-- ================================================================ -->
+    <!-- VARIABLE — formula resource for resolution minutes calculation    -->
+    <!-- ================================================================ -->
+    <formulas>
+        <name>formulaResolutionMinutes</name>
+        <dataType>Number</dataType>
+        <scale>2</scale>
+        <expression>({!$Record.ClosedDate} - {!$Record.CreatedDate}) * 1440</expression>
+    </formulas>
+
+    <!-- ================================================================ -->
+    <!-- DECISION — skip if Resolution_Time_Minutes__c is already set      -->
+    <!-- ================================================================ -->
+    <decisions>
+        <name>CheckResolutionAlreadySet</name>
+        <label>Resolution Already Calculated?</label>
+        <locationX>200</locationX>
+        <locationY>120</locationY>
+        <defaultConnector>
+            <targetReference>StampResolutionTime</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Not Yet Set</defaultConnectorLabel>
+        <rules>
+            <name>AlreadyCalculated</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>$Record.Resolution_Time_Minutes__c</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <label>Already Calculated</label>
+            <!-- No connector — terminates (already set, skip update) -->
+        </rules>
+    </decisions>
+
+    <!-- ================================================================ -->
+    <!-- RECORD UPDATE — stamp Resolution_Time_Minutes__c on the Case      -->
+    <!-- ================================================================ -->
+    <recordUpdates>
+        <name>StampResolutionTime</name>
+        <label>Stamp Resolution Time</label>
+        <locationX>200</locationX>
+        <locationY>250</locationY>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>Resolution_Time_Minutes__c</field>
+            <value>
+                <elementReference>formulaResolutionMinutes</elementReference>
+            </value>
+        </inputAssignments>
+        <object>Case</object>
+    </recordUpdates>
+</Flow>

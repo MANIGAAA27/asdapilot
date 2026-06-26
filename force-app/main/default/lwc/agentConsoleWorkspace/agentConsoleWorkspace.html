@@ -1,0 +1,295 @@
+<template>
+    <lightning-card title="Agent Console Workspace" icon-name="standard:case">
+        <!-- Loading spinner while initial data loads -->
+        <template lwc:if={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading workspace..." size="medium"></lightning-spinner>
+            </div>
+        </template>
+
+        <!-- Error banner -->
+        <template lwc:if={errorMessage}>
+            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-around_small" role="alert">
+                <span class="slds-assistive-text">Error</span>
+                <lightning-icon icon-name="utility:error" alternative-text="Error" size="small"></lightning-icon>
+                <h2 class="slds-m-left_small">{errorMessage}</h2>
+            </div>
+        </template>
+
+        <!-- Main workspace content -->
+        <template lwc:if={workspaceReady}>
+            <div class="slds-grid slds-gutters slds-wrap slds-p-around_small">
+
+                <!-- ══════════════════════════════════════════════════ -->
+                <!-- LEFT COLUMN: Case Summary + SLA Timer + Customer   -->
+                <!-- ══════════════════════════════════════════════════ -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+
+                    <!-- Case Summary Card -->
+                    <div class="slds-card slds-m-bottom_small">
+                        <div class="slds-card__header slds-grid">
+                            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                                <div class="slds-media__figure slds-media__figure_fixed-width">
+                                    <lightning-icon icon-name="standard:case" size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h2 class="slds-card__header-title slds-truncate">
+                                        Case #{caseData.caseRecord.CaseNumber}
+                                    </h2>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <dl class="slds-dl_horizontal">
+                                <dt class="slds-dl_horizontal__label slds-text-color_weak">Subject</dt>
+                                <dd class="slds-dl_horizontal__detail slds-truncate">{caseData.caseRecord.Subject}</dd>
+                                <dt class="slds-dl_horizontal__label slds-text-color_weak">Status</dt>
+                                <dd class="slds-dl_horizontal__detail">
+                                    <lightning-badge label={caseData.caseRecord.Status}></lightning-badge>
+                                </dd>
+                                <dt class="slds-dl_horizontal__label slds-text-color_weak">Priority</dt>
+                                <dd class="slds-dl_horizontal__detail">{caseData.caseRecord.Priority}</dd>
+                                <dt class="slds-dl_horizontal__label slds-text-color_weak">Origin</dt>
+                                <dd class="slds-dl_horizontal__detail">{caseData.caseRecord.Origin}</dd>
+                            </dl>
+                            <template lwc:if={caseData.caseRecord.Description}>
+                                <p class="slds-m-top_x-small slds-text-body_small">{caseData.caseRecord.Description}</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- SLA Countdown Card -->
+                    <template lwc:if={hasMilestones}>
+                        <div class="slds-card slds-m-bottom_small">
+                            <div class="slds-card__header">
+                                <header class="slds-media slds-media_center">
+                                    <div class="slds-media__figure slds-media__figure_fixed-width">
+                                        <lightning-icon icon-name="utility:clock" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h2 class="slds-card__header-title">SLA Countdown</h2>
+                                    </div>
+                                </header>
+                            </div>
+                            <div class="slds-card__body slds-card__body_inner">
+                                <template for:each={caseData.milestones} for:item="milestone">
+                                    <div key={milestone.Id} class={getSlaClass}>
+                                        <p class="slds-text-body_small slds-text-color_weak">
+                                            Target: {milestone.TargetDate}
+                                        </p>
+                                        <p class="slds-text-heading_small slds-m-top_xx-small">
+                                            <strong>{slaCountdown}</strong>
+                                        </p>
+                                        <template lwc:if={milestone.IsViolated}>
+                                            <lightning-badge label="SLA Violated" class="slds-badge_inverse"></lightning-badge>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+
+                    <!-- Customer Profile Card -->
+                    <template lwc:if={caseData.contactRecord}>
+                        <div class="slds-card slds-m-bottom_small">
+                            <div class="slds-card__header">
+                                <header class="slds-media slds-media_center">
+                                    <div class="slds-media__figure slds-media__figure_fixed-width">
+                                        <lightning-icon icon-name="standard:contact" size="small"></lightning-icon>
+                                    </div>
+                                    <div class="slds-media__body">
+                                        <h2 class="slds-card__header-title">Customer Profile</h2>
+                                    </div>
+                                </header>
+                            </div>
+                            <div class="slds-card__body slds-card__body_inner">
+                                <dl class="slds-dl_horizontal">
+                                    <dt class="slds-dl_horizontal__label slds-text-color_weak">Name</dt>
+                                    <dd class="slds-dl_horizontal__detail">{caseData.contactRecord.Name}</dd>
+                                    <dt class="slds-dl_horizontal__label slds-text-color_weak">Email</dt>
+                                    <dd class="slds-dl_horizontal__detail slds-truncate">{caseData.contactRecord.Email}</dd>
+                                    <dt class="slds-dl_horizontal__label slds-text-color_weak">Phone</dt>
+                                    <dd class="slds-dl_horizontal__detail">{caseData.contactRecord.Phone}</dd>
+                                </dl>
+                                <template lwc:if={caseData.accountRecord}>
+                                    <p class="slds-text-body_small slds-m-top_x-small slds-text-color_weak">
+                                        Account: {caseData.accountRecord.Name}
+                                    </p>
+                                </template>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- CENTRE COLUMN: Previous Interactions                   -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                    <div class="slds-card">
+                        <div class="slds-card__header">
+                            <header class="slds-media slds-media_center">
+                                <div class="slds-media__figure slds-media__figure_fixed-width">
+                                    <lightning-icon icon-name="standard:activity" size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h2 class="slds-card__header-title">Previous Interactions</h2>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <template lwc:if={interactionsLoading}>
+                                <lightning-spinner alternative-text="Loading interactions..." size="small"></lightning-spinner>
+                            </template>
+
+                            <template lwc:if={interactionsReady}>
+                                <!-- Emails Section -->
+                                <template lwc:if={hasEmails}>
+                                    <h3 class="slds-text-heading_small slds-m-bottom_xx-small">Emails</h3>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.emails} for:item="email">
+                                            <li key={email.Id} class="slds-item slds-p-vertical_xx-small">
+                                                <p class="slds-text-body_small slds-truncate">
+                                                    <lightning-icon icon-name="utility:email" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                    {email.Subject}
+                                                </p>
+                                                <p class="slds-text-body_small slds-text-color_weak">{email.FromAddress}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+
+                                <!-- Tasks Section -->
+                                <template lwc:if={hasTasks}>
+                                    <h3 class="slds-text-heading_small slds-m-top_small slds-m-bottom_xx-small">Tasks</h3>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.tasks} for:item="task">
+                                            <li key={task.Id} class="slds-item slds-p-vertical_xx-small">
+                                                <p class="slds-text-body_small slds-truncate">
+                                                    <lightning-icon icon-name="utility:task" size="x-small" class="slds-m-right_xx-small"></lightning-icon>
+                                                    {task.Subject}
+                                                </p>
+                                                <p class="slds-text-body_small slds-text-color_weak">{task.Status}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+
+                                <!-- Prior Cases Section -->
+                                <template lwc:if={hasPriorCases}>
+                                    <h3 class="slds-text-heading_small slds-m-top_small slds-m-bottom_xx-small">Prior Cases</h3>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.priorCases} for:item="priorCase">
+                                            <li key={priorCase.Id} class="slds-item slds-p-vertical_xx-small">
+                                                <p class="slds-text-body_small slds-truncate">
+                                                    #{priorCase.CaseNumber} — {priorCase.Subject}
+                                                </p>
+                                                <p class="slds-text-body_small slds-text-color_weak">Closed: {priorCase.ClosedDate}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+
+                                <template lwc:if={noInteractions}>
+                                    <p class="slds-text-body_small slds-text-color_weak">No prior interactions found.</p>
+                                </template>
+                            </template>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ══════════════════════════════════════════════════════ -->
+                <!-- RIGHT COLUMN: Knowledge Articles + AI Recommendations  -->
+                <!-- ══════════════════════════════════════════════════════ -->
+                <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+
+                    <!-- Knowledge Articles Card -->
+                    <div class="slds-card slds-m-bottom_small">
+                        <div class="slds-card__header">
+                            <header class="slds-media slds-media_center">
+                                <div class="slds-media__figure slds-media__figure_fixed-width">
+                                    <lightning-icon icon-name="standard:knowledge" size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h2 class="slds-card__header-title">Knowledge Articles</h2>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <div class="slds-form-element slds-m-bottom_small">
+                                <lightning-input
+                                    type="search"
+                                    label="Search Knowledge"
+                                    value={knowledgeSearchTerm}
+                                    onchange={handleKnowledgeSearch}
+                                    placeholder="Enter search terms..."
+                                ></lightning-input>
+                            </div>
+                            <template lwc:if={knowledgeLoading}>
+                                <lightning-spinner alternative-text="Searching..." size="small"></lightning-spinner>
+                            </template>
+                            <template lwc:if={hasKnowledgeResults}>
+                                <ul class="slds-has-dividers_bottom-space">
+                                    <template for:each={knowledgeArticles} for:item="article">
+                                        <li key={article.Id} class="slds-item slds-p-vertical_xx-small">
+                                            <p class="slds-text-body_small slds-truncate slds-text-link">{article.Title}</p>
+                                            <template lwc:if={article.Summary}>
+                                                <p class="slds-text-body_small slds-text-color_weak slds-truncate">{article.Summary}</p>
+                                            </template>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:if={noKnowledgeResults}>
+                                <p class="slds-text-body_small slds-text-color_weak">No articles found. Try different keywords.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                    <!-- AI Recommendations Card -->
+                    <div class="slds-card">
+                        <div class="slds-card__header">
+                            <header class="slds-media slds-media_center">
+                                <div class="slds-media__figure slds-media__figure_fixed-width">
+                                    <lightning-icon icon-name="utility:einstein" size="small"></lightning-icon>
+                                </div>
+                                <div class="slds-media__body">
+                                    <h2 class="slds-card__header-title">AI Recommendations</h2>
+                                </div>
+                            </header>
+                        </div>
+                        <div class="slds-card__body slds-card__body_inner">
+                            <template lwc:if={recommendationsLoading}>
+                                <lightning-spinner alternative-text="Loading recommendations..." size="small"></lightning-spinner>
+                            </template>
+                            <template lwc:if={hasRecommendations}>
+                                <ul class="slds-has-dividers_bottom-space">
+                                    <template for:each={recommendations} for:item="rec">
+                                        <li key={rec.Id} class="slds-item slds-p-vertical_x-small">
+                                            <div class="slds-grid slds-gutters_xx-small slds-grid_vertical-align-start">
+                                                <div class="slds-col slds-grow">
+                                                    <p class="slds-text-body_small slds-text-heading_label-normal">
+                                                        {rec.Recommendation_Type__c}
+                                                    </p>
+                                                    <p class="slds-text-body_small slds-m-top_xx-small">{rec.Recommendation_Text__c}</p>
+                                                </div>
+                                                <template lwc:if={rec.Confidence_Score__c}>
+                                                    <div class="slds-col slds-no-flex">
+                                                        <lightning-badge label={rec.Confidence_Score__c}></lightning-badge>
+                                                    </div>
+                                                </template>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </template>
+                            <template lwc:if={noRecommendations}>
+                                <p class="slds-text-body_small slds-text-color_weak">No AI recommendations available for this case.</p>
+                            </template>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>
