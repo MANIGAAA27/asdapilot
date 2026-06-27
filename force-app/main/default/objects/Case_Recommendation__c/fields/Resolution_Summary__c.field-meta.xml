@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Resolution_Summary__c</fullName>
+    <label>Resolution Summary</label>
+    <description>Short summary of the recommended resolution approach for display in the Agent Console Workspace Recommendations panel.</description>
+    <type>LongTextArea</type>
+    <length>4096</length>
+    <visibleLines>3</visibleLines>
+</CustomField>
