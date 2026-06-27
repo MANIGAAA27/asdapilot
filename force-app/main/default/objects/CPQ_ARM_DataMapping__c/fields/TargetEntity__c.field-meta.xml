@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>TargetEntity__c</fullName>
+    <label>Target Entity</label>
+    <description>API name of the target ARM object receiving the migrated data (e.g., arm__Quote__c). Stored as text to support dynamic metadata discovery.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

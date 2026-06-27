@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Migration Manager Permission Set</label>
+    <description>Grants migration process initiation permissions for ARMT. Assigned to Migration Manager persona users who need full CRUD on migration objects and execution rights for Apex batch jobs.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <license>Salesforce</license>
+
+    <!-- Apex class access -->
+    <classAccesses>
+        <apexClass>ARM_MigrationScheduler</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+    <classAccesses>
+        <apexClass>CustomMigrationBatch</apexClass>
+        <enabled>true</enabled>
+    </classAccesses>
+
+    <!-- ARMT_MigrationJob__c — full CRUD -->
+    <objectPermissions>
+        <object>ARMT_MigrationJob__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>true</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- CPQ_ARM_DataMapping__c — full CRUD -->
+    <objectPermissions>
+        <object>CPQ_ARM_DataMapping__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>true</allowEdit>
+        <allowDelete>true</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Migration_Log__c — read + create -->
+    <objectPermissions>
+        <object>Migration_Log__c</object>
+        <allowCreate>true</allowCreate>
+        <allowRead>true</allowRead>
+        <allowEdit>false</allowEdit>
+        <allowDelete>false</allowDelete>
+        <viewAllRecords>true</viewAllRecords>
+        <modifyAllRecords>false</modifyAllRecords>
+    </objectPermissions>
+
+    <!-- Field permissions: ARMT_MigrationJob__c -->
+    <fieldPermissions>
+        <field>ARMT_MigrationJob__c.MigrationName__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>ARMT_MigrationJob__c.MigrationStatus__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>ARMT_MigrationJob__c.StartDate__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>ARMT_MigrationJob__c.EndDate__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+
+    <!-- Field permissions: CPQ_ARM_DataMapping__c -->
+    <fieldPermissions>
+        <field>CPQ_ARM_DataMapping__c.MappingName__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CPQ_ARM_DataMapping__c.SourceEntity__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <field>CPQ_ARM_DataMapping__c.TargetEntity__c</field>
+        <readable>true</readable>
+        <editable>true</editable>
+    </fieldPermissions>
+
+    <!-- Field permissions: Migration_Log__c -->
+    <fieldPermissions>
+        <field>Migration_Log__c.ValidationStatus__c</field>
+        <readable>true</readable>
+        <editable>false</editable>
+    </fieldPermissions>
+</PermissionSet>

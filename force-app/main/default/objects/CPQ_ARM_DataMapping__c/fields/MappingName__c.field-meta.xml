@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>MappingName__c</fullName>
+    <label>Mapping Name</label>
+    <description>Descriptive name for this data mapping configuration record, used for identification in reports and the mapping wizard UI.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

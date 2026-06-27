@@ -1,0 +1,136 @@
+<template>
+    <lightning-card title="Data Mapping Wizard" icon-name="standard:data_mapping">
+        <div class="slds-m-around_medium">
+            <!-- Error display -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <p>{error}</p>
+                </div>
+            </template>
+
+            <!-- Progress indicator -->
+            <lightning-progress-indicator current-step={currentStep} type="base" has-error={hasError}>
+                <lightning-progress-step label="Select Mappings" value="step1"></lightning-progress-step>
+                <lightning-progress-step label="Configure Details" value="step2"></lightning-progress-step>
+                <lightning-progress-step label="Review &amp; Save" value="step3"></lightning-progress-step>
+            </lightning-progress-indicator>
+
+            <div class="slds-m-top_large">
+
+                <!-- Step 1: Select / view existing mappings -->
+                <template if:true={isStep1}>
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Existing Data Mappings</h2>
+
+                    <template if:true={isLoadingMappings}>
+                        <lightning-spinner alternative-text="Loading mappings..." size="small">
+                        </lightning-spinner>
+                    </template>
+
+                    <template if:false={isLoadingMappings}>
+                        <template if:true={hasMappings}>
+                            <lightning-datatable
+                                key-field="Id"
+                                data={mappings}
+                                columns={mappingColumns}
+                                hide-checkbox-column>
+                            </lightning-datatable>
+                        </template>
+                        <template if:false={hasMappings}>
+                            <p class="slds-text-body_regular slds-text-color_weak">
+                                No data mappings configured. Create a new mapping below.
+                            </p>
+                        </template>
+                    </template>
+
+                    <div class="slds-m-top_large">
+                        <lightning-button
+                            label="Create New Mapping"
+                            variant="brand"
+                            onclick={handleCreateNew}
+                            icon-name="utility:add">
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <!-- Step 2: Configure new mapping details -->
+                <template if:true={isStep2}>
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Configure Mapping</h2>
+
+                    <lightning-input
+                        label="Mapping Name"
+                        value={newMapping.mappingName}
+                        name="mappingName"
+                        onchange={handleInputChange}
+                        required
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+
+                    <lightning-input
+                        label="Source Entity (CPQ API Name)"
+                        value={newMapping.sourceEntity}
+                        name="sourceEntity"
+                        placeholder="e.g. SBQQ__Quote__c"
+                        onchange={handleInputChange}
+                        required
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+
+                    <lightning-input
+                        label="Target Entity (ARM API Name)"
+                        value={newMapping.targetEntity}
+                        name="targetEntity"
+                        placeholder="e.g. arm__Quote__c"
+                        onchange={handleInputChange}
+                        required
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+
+                    <div class="slds-m-top_medium">
+                        <lightning-button label="Back" onclick={handleBack} variant="neutral">
+                        </lightning-button>
+                        <lightning-button
+                            label="Next: Review"
+                            onclick={handleReview}
+                            variant="brand"
+                            disabled={isStep2Invalid}
+                            class="slds-m-left_small">
+                        </lightning-button>
+                    </div>
+                </template>
+
+                <!-- Step 3: Review and save -->
+                <template if:true={isStep3}>
+                    <h2 class="slds-text-heading_medium slds-m-bottom_medium">Review Mapping</h2>
+
+                    <dl class="slds-dl_horizontal">
+                        <dt class="slds-dl_horizontal__label">Mapping Name:</dt>
+                        <dd class="slds-dl_horizontal__detail">{newMapping.mappingName}</dd>
+                        <dt class="slds-dl_horizontal__label">Source Entity:</dt>
+                        <dd class="slds-dl_horizontal__detail">{newMapping.sourceEntity}</dd>
+                        <dt class="slds-dl_horizontal__label">Target Entity:</dt>
+                        <dd class="slds-dl_horizontal__detail">{newMapping.targetEntity}</dd>
+                    </dl>
+
+                    <div class="slds-m-top_medium">
+                        <lightning-button label="Back" onclick={handleBack} variant="neutral">
+                        </lightning-button>
+                        <lightning-button
+                            label="Save Mapping"
+                            onclick={handleSave}
+                            variant="brand"
+                            disabled={isSaving}
+                            class="slds-m-left_small">
+                        </lightning-button>
+                    </div>
+
+                    <template if:true={isSaving}>
+                        <lightning-spinner alternative-text="Saving..." size="small" class="slds-m-top_small">
+                        </lightning-spinner>
+                    </template>
+                </template>
+
+            </div>
+        </div>
+    </lightning-card>
+</template>
