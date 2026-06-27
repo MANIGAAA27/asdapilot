@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workspace_Used__c</fullName>
+    <label>Workspace Used</label>
+    <description>Checkbox set to TRUE by the Agent Console Workspace LWC on component load. Used to measure workspace adoption for AHT/FCR reporting.</description>
+    <type>Checkbox</type>
+    <defaultValue>false</defaultValue>
+</CustomField>
