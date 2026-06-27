@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Workspace_Opened_At__c</fullName>
+    <label>Workspace Opened At</label>
+    <description>DateTime stamped when the Agent Console Workspace is opened for this case. Supports AHT reporting.</description>
+    <type>DateTime</type>
+    <required>false</required>
+</CustomField>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Confidence_Score__c</fullName>
+    <label>Confidence Score</label>
+    <description>AI confidence score for this recommendation expressed as a percentage (0-100).</description>
+    <type>Number</type>
+    <precision>5</precision>
+    <scale>2</scale>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>

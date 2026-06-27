@@ -1,0 +1,250 @@
+<template>
+    <div class="workspace-root slds-p-around_medium">
+
+        <!-- Loading spinner -->
+        <template if:true={isLoading}>
+            <lightning-spinner alternative-text="Loading workspace..." size="medium"></lightning-spinner>
+        </template>
+
+        <!-- Top-level error banner -->
+        <template if:true={workspaceError}>
+            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-bottom_medium" role="alert">
+                <lightning-icon icon-name="utility:error" alternative-text="error"
+                    size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                <span>{workspaceError}</span>
+            </div>
+        </template>
+
+        <!-- Main workspace rendered once data is available -->
+        <template if:true={workspaceData}>
+
+            <!-- ── CASE HEADER ─────────────────────────────────────────── -->
+            <lightning-card icon-name="standard:case" class="slds-m-bottom_medium">
+                <h2 slot="title" class="slds-text-heading_small">
+                    Case {caseNumber} — {caseSubject}
+                </h2>
+                <div slot="actions">
+                    <template if:true={hasMilestone}>
+                        <span class={slaTimerClass}>
+                            <lightning-icon icon-name="utility:clock"
+                                alternative-text="SLA Timer" size="x-small"
+                                class="slds-m-right_xx-small"></lightning-icon>
+                            {slaCountdown}
+                        </span>
+                    </template>
+                </div>
+
+                <div class="slds-grid slds-wrap slds-p-horizontal_medium slds-p-bottom_medium">
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-right_small slds-m-bottom_x-small">
+                        <p class="slds-text-title_caps slds-text-color_weak">Status</p>
+                        <p class="slds-text-body_regular">{caseStatus}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-right_small slds-m-bottom_x-small">
+                        <p class="slds-text-title_caps slds-text-color_weak">Priority</p>
+                        <p class="slds-text-body_regular">{casePriority}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-p-right_small slds-m-bottom_x-small">
+                        <p class="slds-text-title_caps slds-text-color_weak">Origin</p>
+                        <p class="slds-text-body_regular">{caseOrigin}</p>
+                    </div>
+                    <div class="slds-col slds-size_1-of-2 slds-medium-size_1-of-4 slds-m-bottom_x-small">
+                        <p class="slds-text-title_caps slds-text-color_weak">Created</p>
+                        <p class="slds-text-body_regular">
+                            <lightning-formatted-date-time value={caseCreatedDate}
+                                year="numeric" month="short" day="numeric"
+                                hour="2-digit" minute="2-digit">
+                            </lightning-formatted-date-time>
+                        </p>
+                    </div>
+                </div>
+
+                <template if:true={caseDescription}>
+                    <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                        <p class="slds-text-title_caps slds-text-color_weak slds-m-bottom_xx-small">Description</p>
+                        <p class="slds-text-body_regular">{caseDescription}</p>
+                    </div>
+                </template>
+            </lightning-card>
+
+            <!-- ── CUSTOMER PROFILE ────────────────────────────────────── -->
+            <template if:true={hasCustomerContext}>
+                <lightning-card title="Customer Profile" icon-name="standard:contact"
+                    class="slds-m-bottom_medium">
+                    <div class="slds-grid slds-wrap slds-p_medium">
+
+                        <template if:true={workspaceData.contactRecord}>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-right_medium slds-m-bottom_small">
+                                <h3 class="slds-text-heading_x-small slds-m-bottom_xx-small">Contact</h3>
+                                <p><strong>{workspaceData.contactRecord.Name}</strong></p>
+                                <template if:true={workspaceData.contactRecord.Email}>
+                                    <p>
+                                        <lightning-icon icon-name="utility:email" size="x-small"
+                                            class="slds-m-right_xx-small"></lightning-icon>
+                                        <a href={contactEmailLink}>{workspaceData.contactRecord.Email}</a>
+                                    </p>
+                                </template>
+                                <template if:true={workspaceData.contactRecord.Phone}>
+                                    <p>
+                                        <lightning-icon icon-name="utility:phone_portrait" size="x-small"
+                                            class="slds-m-right_xx-small"></lightning-icon>
+                                        {workspaceData.contactRecord.Phone}
+                                    </p>
+                                </template>
+                            </div>
+                        </template>
+
+                        <template if:true={workspaceData.accountRecord}>
+                            <div class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2">
+                                <h3 class="slds-text-heading_x-small slds-m-bottom_xx-small">Account</h3>
+                                <p><strong>{workspaceData.accountRecord.Name}</strong></p>
+                                <template if:true={workspaceData.accountRecord.Industry}>
+                                    <p class="slds-text-color_weak">{workspaceData.accountRecord.Industry}</p>
+                                </template>
+                                <template if:true={workspaceData.accountRecord.Phone}>
+                                    <p>
+                                        <lightning-icon icon-name="utility:call" size="x-small"
+                                            class="slds-m-right_xx-small"></lightning-icon>
+                                        {workspaceData.accountRecord.Phone}
+                                    </p>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </template>
+
+            <!-- ── AI RECOMMENDATIONS ──────────────────────────────────── -->
+            <template if:true={hasRecommendations}>
+                <lightning-card title="AI Recommended Resolutions" icon-name="standard:bot"
+                    class="slds-m-bottom_medium">
+                    <div class="slds-p_medium">
+                        <template for:each={workspaceData.recommendations} for:item="rec">
+                            <div key={rec.Id} class="slds-box slds-box_x-small slds-m-bottom_x-small">
+                                <div class="slds-grid slds-grid_align-spread slds-m-bottom_xx-small">
+                                    <span class="slds-badge slds-badge_lightest">{rec.Recommendation_Type__c}</span>
+                                    <template if:true={rec.Confidence_Score__c}>
+                                        <span class="slds-text-color_weak slds-text-body_small">
+                                            {rec.Confidence_Score__c}% confidence
+                                        </span>
+                                    </template>
+                                </div>
+                                <p class="slds-text-body_regular">{rec.Recommendation_Text__c}</p>
+                            </div>
+                        </template>
+                    </div>
+                </lightning-card>
+            </template>
+
+            <!-- ── PREVIOUS INTERACTIONS ───────────────────────────────── -->
+            <lightning-card title="Previous Interactions" icon-name="standard:activity"
+                class="slds-m-bottom_medium">
+                <div slot="actions">
+                    <template if:false={interactionsLoaded}>
+                        <lightning-button label="Load Interactions" variant="neutral"
+                            onclick={handleLoadInteractions}></lightning-button>
+                    </template>
+                </div>
+
+                <template if:true={isLoadingInteractions}>
+                    <div class="slds-p_medium">
+                        <lightning-spinner alternative-text="Loading..." size="small"></lightning-spinner>
+                    </div>
+                </template>
+
+                <template if:true={interactionsLoaded}>
+                    <div class="slds-p_medium">
+                        <lightning-tabset>
+                            <lightning-tab label={emailTabLabel} value="emails">
+                                <template if:true={hasEmails}>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.emails} for:item="em">
+                                            <li key={em.Id} class="slds-item slds-p-vertical_x-small">
+                                                <p><strong>{em.Subject}</strong></p>
+                                                <p class="slds-text-color_weak slds-text-body_small">{em.FromAddress}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:false={hasEmails}>
+                                    <p class="slds-text-color_weak slds-p_medium">No emails on this case.</p>
+                                </template>
+                            </lightning-tab>
+
+                            <lightning-tab label={taskTabLabel} value="tasks">
+                                <template if:true={hasTasks}>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.tasks} for:item="t">
+                                            <li key={t.Id} class="slds-item slds-p-vertical_x-small">
+                                                <p><strong>{t.Subject}</strong> — {t.Status}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:false={hasTasks}>
+                                    <p class="slds-text-color_weak slds-p_medium">No tasks on this case.</p>
+                                </template>
+                            </lightning-tab>
+
+                            <lightning-tab label={relatedCasesTabLabel} value="relatedCases">
+                                <template if:true={hasRelatedCases}>
+                                    <ul class="slds-has-dividers_bottom-space">
+                                        <template for:each={interactionData.relatedCases} for:item="rc">
+                                            <li key={rc.Id} class="slds-item slds-p-vertical_x-small">
+                                                <p><strong>{rc.CaseNumber}</strong> — {rc.Subject}</p>
+                                                <p class="slds-text-color_weak slds-text-body_small">Closed: {rc.ClosedDate}</p>
+                                            </li>
+                                        </template>
+                                    </ul>
+                                </template>
+                                <template if:false={hasRelatedCases}>
+                                    <p class="slds-text-color_weak slds-p_medium">No prior closed cases.</p>
+                                </template>
+                            </lightning-tab>
+                        </lightning-tabset>
+                    </div>
+                </template>
+            </lightning-card>
+
+            <!-- ── KNOWLEDGE ARTICLES ──────────────────────────────────── -->
+            <lightning-card title="Knowledge Articles" icon-name="standard:knowledge"
+                class="slds-m-bottom_medium">
+                <div class="slds-p_medium">
+                    <lightning-input type="search" label="Search Knowledge"
+                        placeholder="Search knowledge articles..."
+                        value={knowledgeSearchTerm}
+                        onchange={handleKnowledgeSearch}
+                        class="slds-m-bottom_small">
+                    </lightning-input>
+
+                    <template if:true={isLoadingKnowledge}>
+                        <lightning-spinner alternative-text="Searching..." size="small"></lightning-spinner>
+                    </template>
+
+                    <template if:true={hasKnowledgeResults}>
+                        <ul class="slds-has-dividers_bottom-space">
+                            <template for:each={knowledgeArticles} for:item="ka">
+                                <li key={ka.Id} class="slds-item slds-p-vertical_x-small">
+                                    <p>
+                                        <lightning-icon icon-name="standard:knowledge" size="x-small"
+                                            class="slds-m-right_x-small"></lightning-icon>
+                                        <strong>{ka.Title}</strong>
+                                    </p>
+                                    <template if:true={ka.Summary}>
+                                        <p class="slds-text-color_weak slds-text-body_small">{ka.Summary}</p>
+                                    </template>
+                                </li>
+                            </template>
+                        </ul>
+                    </template>
+
+                    <template if:true={knowledgeSearched}>
+                        <template if:false={hasKnowledgeResults}>
+                            <p class="slds-text-color_weak">No knowledge articles found.</p>
+                        </template>
+                    </template>
+                </div>
+            </lightning-card>
+
+        </template>
+    </div>
+</template>
