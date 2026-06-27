@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>ARM Migration Validation Flow</label>
+    <description>Autolaunched flow that performs validation checks on migration job data. Verifies that at least one valid CPQ_ARM_DataMapping__c record exists before allowing the migration to proceed. Returns a validation result string.</description>
+    <interviewLabel>ARM Migration Validation Flow {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- Input / output variables -->
+    <variables>
+        <name>migrationJobId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>validationResult</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>true</isOutput>
+    </variables>
+    <variables>
+        <name>firstMappingRecord</name>
+        <dataType>SObject</dataType>
+        <objectType>CPQ_ARM_DataMapping__c</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>LookupFirstMapping</targetReference>
+        </connector>
+    </start>
+
+    <!-- Look up one CPQ_ARM_DataMapping__c with both entities populated -->
+    <recordLookups>
+        <name>LookupFirstMapping</name>
+        <label>Lookup First Valid Mapping</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <connector>
+            <targetReference>CheckMappingsExist</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>SourceEntity__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <filters>
+            <field>TargetEntity__c</field>
+            <operator>IsNull</operator>
+            <value>
+                <booleanValue>false</booleanValue>
+            </value>
+        </filters>
+        <getFirstRecordOnly>true</getFirstRecordOnly>
+        <object>CPQ_ARM_DataMapping__c</object>
+        <outputReference>firstMappingRecord</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>SourceEntity__c</queriedFields>
+        <queriedFields>TargetEntity__c</queriedFields>
+    </recordLookups>
+
+    <!-- Decision: did the lookup find a valid mapping? -->
+    <decisions>
+        <name>CheckMappingsExist</name>
+        <label>Check Mappings Exist</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <defaultConnector>
+            <targetReference>SetValidationFailed</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>No Mappings Found</defaultConnectorLabel>
+        <rules>
+            <name>MappingsExist</name>
+            <conditionLogic>and</conditionLogic>
+            <conditions>
+                <leftValueReference>firstMappingRecord.Id</leftValueReference>
+                <operator>IsNull</operator>
+                <rightValue>
+                    <booleanValue>false</booleanValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>SetValidationPassed</targetReference>
+            </connector>
+            <label>Mappings Found</label>
+        </rules>
+    </decisions>
+
+    <!-- Assign validation result: PASSED -->
+    <assignments>
+        <name>SetValidationPassed</name>
+        <label>Set Validation Passed</label>
+        <locationX>184</locationX>
+        <locationY>380</locationY>
+        <assignmentItems>
+            <assignToReference>validationResult</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>PASSED</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+
+    <!-- Assign validation result: FAILED -->
+    <assignments>
+        <name>SetValidationFailed</name>
+        <label>Set Validation Failed</label>
+        <locationX>440</locationX>
+        <locationY>380</locationY>
+        <assignmentItems>
+            <assignToReference>validationResult</assignToReference>
+            <operator>Assign</operator>
+            <value>
+                <stringValue>FAILED: No valid data mappings found. Ensure at least one CPQ ARM Data Mapping record has both Source Entity and Target Entity populated.</stringValue>
+            </value>
+        </assignmentItems>
+    </assignments>
+</Flow>

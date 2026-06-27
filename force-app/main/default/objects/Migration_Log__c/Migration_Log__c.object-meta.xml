@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomObject xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Migration Log</label>
+    <pluralLabel>Migration Logs</pluralLabel>
+    <description>Logs information related to migration jobs, including validation status, error details, and audit trail entries.</description>
+    <nameField>
+        <label>Log Entry Name</label>
+        <type>AutoNumber</type>
+        <displayFormat>LOG-{00000}</displayFormat>
+    </nameField>
+    <deploymentStatus>Deployed</deploymentStatus>
+    <sharingModel>ReadWrite</sharingModel>
+    <enableActivities>false</enableActivities>
+    <enableReports>true</enableReports>
+    <enableSearch>true</enableSearch>
+</CustomObject>

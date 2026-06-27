@@ -1,0 +1,122 @@
+<template>
+    <lightning-card title="Job Tracker" icon-name="standard:work_order">
+        <div class="slds-m-around_medium">
+            <!-- Error display -->
+            <template if:true={error}>
+                <div class="slds-notify slds-notify_alert slds-alert_error" role="alert">
+                    <span class="slds-assistive-text">Error</span>
+                    <p>{error}</p>
+                </div>
+            </template>
+
+            <!-- Job list header actions -->
+            <div class="slds-grid slds-gutters slds-m-bottom_medium">
+                <div class="slds-col">
+                    <lightning-input
+                        type="search"
+                        label="Filter Jobs"
+                        placeholder="Search by job name or status..."
+                        onchange={handleFilterChange}
+                        value={filterValue}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-grow-none slds-align-bottom">
+                    <lightning-button
+                        label="Refresh"
+                        icon-name="utility:refresh"
+                        onclick={handleRefresh}
+                        variant="neutral">
+                    </lightning-button>
+                </div>
+            </div>
+
+            <!-- Loading spinner -->
+            <template if:true={isLoading}>
+                <lightning-spinner alternative-text="Loading migration jobs..." size="medium">
+                </lightning-spinner>
+            </template>
+
+            <!-- Job list table -->
+            <template if:false={isLoading}>
+                <template if:true={hasJobs}>
+                    <lightning-datatable
+                        key-field="Id"
+                        data={filteredJobs}
+                        columns={columns}
+                        onrowaction={handleRowAction}
+                        hide-checkbox-column>
+                    </lightning-datatable>
+                </template>
+                <template if:false={hasJobs}>
+                    <div class="slds-illustration slds-illustration_small slds-m-top_large">
+                        <div class="slds-text-longform">
+                            <p class="slds-text-body_regular">No migration jobs found.</p>
+                        </div>
+                    </div>
+                </template>
+            </template>
+
+            <!-- Selected job detail panel -->
+            <template if:true={selectedJob}>
+                <div class="slds-m-top_large">
+                    <lightning-card title="Job Details" icon-name="standard:task">
+                        <div class="slds-m-around_medium">
+                            <dl class="slds-dl_horizontal">
+                                <dt class="slds-dl_horizontal__label">Name:</dt>
+                                <dd class="slds-dl_horizontal__detail">{selectedJob.Name}</dd>
+                                <dt class="slds-dl_horizontal__label">Migration Name:</dt>
+                                <dd class="slds-dl_horizontal__detail">{selectedJob.MigrationName__c}</dd>
+                                <dt class="slds-dl_horizontal__label">Status:</dt>
+                                <dd class="slds-dl_horizontal__detail">
+                                    <lightning-badge label={selectedJob.MigrationStatus__c} class={statusBadgeClass}>
+                                    </lightning-badge>
+                                </dd>
+                                <dt class="slds-dl_horizontal__label">Start Date:</dt>
+                                <dd class="slds-dl_horizontal__detail">
+                                    <lightning-formatted-date-time
+                                        value={selectedJob.StartDate__c}
+                                        year="numeric"
+                                        month="short"
+                                        day="2-digit"
+                                        hour="2-digit"
+                                        minute="2-digit">
+                                    </lightning-formatted-date-time>
+                                </dd>
+                                <dt class="slds-dl_horizontal__label">End Date:</dt>
+                                <dd class="slds-dl_horizontal__detail">
+                                    <template if:true={selectedJob.EndDate__c}>
+                                        <lightning-formatted-date-time
+                                            value={selectedJob.EndDate__c}
+                                            year="numeric"
+                                            month="short"
+                                            day="2-digit"
+                                            hour="2-digit"
+                                            minute="2-digit">
+                                        </lightning-formatted-date-time>
+                                    </template>
+                                    <template if:false={selectedJob.EndDate__c}>
+                                        <span class="slds-text-color_weak">In progress</span>
+                                    </template>
+                                </dd>
+                            </dl>
+                            <div class="slds-m-top_medium">
+                                <lightning-button
+                                    label="Start Migration"
+                                    variant="brand"
+                                    onclick={handleStartMigration}
+                                    disabled={isMigrationRunning}>
+                                </lightning-button>
+                                <lightning-button
+                                    label="Close"
+                                    variant="neutral"
+                                    onclick={handleCloseDetail}
+                                    class="slds-m-left_small">
+                                </lightning-button>
+                            </div>
+                        </div>
+                    </lightning-card>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>

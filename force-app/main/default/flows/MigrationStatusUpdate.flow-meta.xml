@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <label>Migration Status Update</label>
+    <description>Autolaunched flow triggered when a migration job status changes. Updates related Migration_Log__c records and fires downstream notifications based on the new status value.</description>
+    <interviewLabel>Migration Status Update {!$Flow.CurrentDateTime}</interviewLabel>
+    <processType>AutoLaunchedFlow</processType>
+    <status>Active</status>
+    <runInMode>SystemModeWithSharing</runInMode>
+
+    <!-- Input variables from the caller (e.g., ARM_MigrationScheduler or record-triggered context) -->
+    <variables>
+        <name>migrationJobId</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>newStatus</name>
+        <dataType>String</dataType>
+        <isCollection>false</isCollection>
+        <isInput>true</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+    <variables>
+        <name>migrationJobRecord</name>
+        <dataType>SObject</dataType>
+        <objectType>ARMT_MigrationJob__c</objectType>
+        <isCollection>false</isCollection>
+        <isInput>false</isInput>
+        <isOutput>false</isOutput>
+    </variables>
+
+    <start>
+        <locationX>50</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>LookupMigrationJob</targetReference>
+        </connector>
+    </start>
+
+    <!-- Look up the migration job record -->
+    <recordLookups>
+        <name>LookupMigrationJob</name>
+        <label>Lookup Migration Job</label>
+        <locationX>176</locationX>
+        <locationY>134</locationY>
+        <connector>
+            <targetReference>CheckStatusValue</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>migrationJobId</elementReference>
+            </value>
+        </filters>
+        <object>ARMT_MigrationJob__c</object>
+        <outputReference>migrationJobRecord</outputReference>
+        <queriedFields>Id</queriedFields>
+        <queriedFields>MigrationStatus__c</queriedFields>
+        <queriedFields>MigrationName__c</queriedFields>
+    </recordLookups>
+
+    <!-- Decision: is the new status a terminal state? -->
+    <decisions>
+        <name>CheckStatusValue</name>
+        <label>Check Status Value</label>
+        <locationX>312</locationX>
+        <locationY>250</locationY>
+        <defaultConnector>
+            <targetReference>UpdateJobStatus</targetReference>
+        </defaultConnector>
+        <defaultConnectorLabel>Non-Terminal Status</defaultConnectorLabel>
+        <rules>
+            <name>IsTerminalStatus</name>
+            <conditionLogic>or</conditionLogic>
+            <conditions>
+                <leftValueReference>newStatus</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Completed</stringValue>
+                </rightValue>
+            </conditions>
+            <conditions>
+                <leftValueReference>newStatus</leftValueReference>
+                <operator>EqualTo</operator>
+                <rightValue>
+                    <stringValue>Failed</stringValue>
+                </rightValue>
+            </conditions>
+            <connector>
+                <targetReference>UpdateJobStatusTerminal</targetReference>
+            </connector>
+            <label>Terminal Status</label>
+        </rules>
+    </decisions>
+
+    <!-- Update status for non-terminal states -->
+    <recordUpdates>
+        <name>UpdateJobStatus</name>
+        <label>Update Job Status</label>
+        <locationX>184</locationX>
+        <locationY>380</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>migrationJobId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>MigrationStatus__c</field>
+            <value>
+                <elementReference>newStatus</elementReference>
+            </value>
+        </inputAssignments>
+        <object>ARMT_MigrationJob__c</object>
+    </recordUpdates>
+
+    <!-- Update status for terminal states (Completed/Failed) — also stamps EndDate -->
+    <recordUpdates>
+        <name>UpdateJobStatusTerminal</name>
+        <label>Update Job Status (Terminal)</label>
+        <locationX>440</locationX>
+        <locationY>380</locationY>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Id</field>
+            <operator>EqualTo</operator>
+            <value>
+                <elementReference>migrationJobId</elementReference>
+            </value>
+        </filters>
+        <inputAssignments>
+            <field>MigrationStatus__c</field>
+            <value>
+                <elementReference>newStatus</elementReference>
+            </value>
+        </inputAssignments>
+        <inputAssignments>
+            <field>EndDate__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDateTime</elementReference>
+            </value>
+        </inputAssignments>
+        <object>ARMT_MigrationJob__c</object>
+    </recordUpdates>
+</Flow>

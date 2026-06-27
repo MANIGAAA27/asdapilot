@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>SourceEntity__c</fullName>
+    <label>Source Entity</label>
+    <description>API name of the source CPQ object being mapped (e.g., SBQQ__Quote__c). Stored as text to support dynamic metadata discovery across org boundaries.</description>
+    <type>Text</type>
+    <length>255</length>
+    <required>false</required>
+    <unique>false</unique>
+    <externalId>false</externalId>
+</CustomField>
