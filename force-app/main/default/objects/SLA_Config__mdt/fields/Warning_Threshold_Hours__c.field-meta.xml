@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Warning_Threshold_Hours__c</fullName>
+    <label>Warning Threshold (Hours)</label>
+    <description>Hours remaining on the SLA before the countdown timer enters warning (amber) state. Default: 2 hours.</description>
+    <type>Number</type>
+    <precision>5</precision>
+    <scale>1</scale>
+</CustomField>

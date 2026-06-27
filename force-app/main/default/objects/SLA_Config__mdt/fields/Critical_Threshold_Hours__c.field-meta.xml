@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Critical_Threshold_Hours__c</fullName>
+    <label>Critical Threshold (Hours)</label>
+    <description>Hours remaining on the SLA before the countdown timer enters critical (red) state. Default: 1 hour.</description>
+    <type>Number</type>
+    <precision>5</precision>
+    <scale>1</scale>
+</CustomField>
